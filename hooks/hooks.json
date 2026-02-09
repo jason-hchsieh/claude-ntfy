@@ -1,24 +1,38 @@
 {
-  "Stop": [
-    {
-      "hooks": [
-        {
-          "type": "command",
-          "command": "bash $CLAUDE_PLUGIN_ROOT/hooks/notify-on-stop.sh",
-          "timeout": 10
-        }
-      ]
-    }
-  ],
-  "Notification": [
-    {
-      "hooks": [
-        {
-          "type": "command",
-          "command": "bash $CLAUDE_PLUGIN_ROOT/hooks/notify-on-notification.sh",
-          "timeout": 10
-        }
-      ]
-    }
-  ]
+  "description": "Send push notifications via ntfy when Claude stops or sends notifications",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/notify-on-stop.sh\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/notify-on-notification.sh\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/notify-on-notification.sh\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
 }
