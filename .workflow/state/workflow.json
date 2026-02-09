@@ -1,7 +1,15 @@
 {
-  "phase": "setup",
+  "phase": "work",
   "status": "complete",
-  "currentTrack": null,
-  "tracks": [],
+  "currentTrack": "ntfy-plugin",
+  "tracks": [
+    {
+      "id": "ntfy-plugin",
+      "plan": ".workflow/plans/2026-02-09-ntfy-plugin.md",
+      "status": "complete",
+      "tasks": 7,
+      "tasksCompleted": 7
+    }
+  ],
   "lastUpdated": "2026-02-09"
 }

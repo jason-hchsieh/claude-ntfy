@@ -21,10 +21,22 @@ pnpm run lint        # Lint code
 ## Project Structure
 
 ```
-src/           # Source code
-tests/         # Test files
-.workflow/     # Mycelium workflow state (do not edit manually)
+src/
+  index.ts          # MCP server entry point (stdio transport)
+  mcp-server.ts     # McpServer with send_notification tool
+  ntfy-client.ts    # NtfyClient HTTP client (native fetch)
+  config.ts         # Environment variable config loading
+  types.ts          # NtfyConfig, NtfyMessage interfaces
+tests/              # Test files mirroring src/
+hooks/              # Shell scripts for Claude Code hooks
+docker/             # Docker compose for self-hosted ntfy
+.workflow/          # Mycelium workflow state (do not edit manually)
 ```
+
+## Key Dependencies
+
+- `@modelcontextprotocol/sdk` — MCP server (import from `server/mcp.js` for McpServer, `server/stdio.js` for StdioServerTransport)
+- `zod` — Schema validation for MCP tool inputs
 
 ## Conventions
 
