@@ -1,5 +1,5 @@
 ---
-name: Setup ntfy Server
+name: setup-server
 description: Use this skill when the user wants to set up, configure, or start an ntfy notification server for use with claude-ntfy. Triggers on requests like "set up ntfy", "configure notifications", "start ntfy server", or "set up notification server".
 version: 1.0.0
 ---

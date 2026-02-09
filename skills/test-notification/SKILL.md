@@ -1,5 +1,5 @@
 ---
-name: Test Notification
+name: test-notification
 description: Use this skill when the user wants to test, verify, or debug their ntfy notification setup. Triggers on requests like "test notification", "send test message", "verify ntfy works", or "check notification setup".
 version: 1.0.0
 ---
