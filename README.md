@@ -4,12 +4,20 @@ A Claude Code plugin that sends push notifications via [ntfy](https://ntfy.sh).
 
 Provides two notification channels:
 - **MCP Server** — Claude can call `send_notification` to send notifications on demand
-- **Hooks** — Automatic notifications when Claude stops or sends notification events
+- **Hooks** — Automatic notifications when Claude stops, requests permission, or sends notification events
 
 ## Prerequisites
 
 - Node.js 22+
 - A self-hosted ntfy server (or use the public ntfy.sh service)
+
+## Install as Plugin
+
+```bash
+claude plugin add /path/to/claude-ntfy
+```
+
+This registers the MCP server and hooks automatically.
 
 ## Quick Start
 
@@ -37,18 +45,20 @@ pnpm install
 pnpm run build
 ```
 
-### 4. Configure Claude Code
+## Manual Configuration
 
-#### MCP Server (on-demand notifications)
+If not using the plugin install, configure each channel manually:
+
+### MCP Server (on-demand notifications)
 
 Add to your Claude Code MCP settings (`~/.claude.json` or project `.mcp.json`):
 
 ```json
 {
   "mcpServers": {
-    "ntfy": {
-      "command": "node",
-      "args": ["/absolute/path/to/claude-ntfy/dist/index.js"],
+    "claude-ntfy": {
+      "command": "npx",
+      "args": ["claude-ntfy"],
       "env": {
         "NTFY_TOPIC": "claude-alerts",
         "NTFY_SERVER_URL": "http://localhost:8080"
@@ -60,7 +70,7 @@ Add to your Claude Code MCP settings (`~/.claude.json` or project `.mcp.json`):
 
 Claude will then have access to the `send_notification` tool.
 
-#### Hooks (automatic notifications)
+### Hooks (automatic notifications)
 
 Add to `.claude/settings.json` in your project (or `~/.claude/settings.json` globally):
 
@@ -72,8 +82,8 @@ Add to `.claude/settings.json` in your project (or `~/.claude/settings.json` glo
         "hooks": [
           {
             "type": "command",
-            "command": "/absolute/path/to/claude-ntfy/hooks/notify-on-stop.sh",
-            "async": true
+            "command": "/absolute/path/to/claude-ntfy/hooks/notify.sh",
+            "timeout": 10
           }
         ]
       }
@@ -83,8 +93,19 @@ Add to `.claude/settings.json` in your project (or `~/.claude/settings.json` glo
         "hooks": [
           {
             "type": "command",
-            "command": "/absolute/path/to/claude-ntfy/hooks/notify-on-notification.sh",
-            "async": true
+            "command": "/absolute/path/to/claude-ntfy/hooks/notify.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/absolute/path/to/claude-ntfy/hooks/notify.sh",
+            "timeout": 10
           }
         ]
       }
@@ -94,6 +115,23 @@ Add to `.claude/settings.json` in your project (or `~/.claude/settings.json` glo
 ```
 
 Make sure the hook environment has `NTFY_TOPIC` (and optionally `NTFY_SERVER_URL`, `NTFY_TOKEN`) set.
+
+## Hook Events
+
+The unified `hooks/notify.sh` script handles all events with contextual messages:
+
+| Event | Title | Message |
+|-------|-------|---------|
+| `Stop` | Claude Code finished | Session completed in \<project\>. |
+| `PermissionRequest` | Claude Code needs permission | \<tool\>: \<command\> |
+| `Notification` | (from event) | (from event) (\<project\>) |
+
+## Skills
+
+| Skill | Description |
+|-------|-------------|
+| `setup-server` | Guide through ntfy server setup with Docker, env vars, and subscription |
+| `test-notification` | Send a test notification and verify the setup works |
 
 ## Environment Variables
 
