@@ -7,6 +7,5 @@
   },
   "repository": "https://github.com/jason-hchsieh/claude-ntfy",
   "license": "MIT",
-  "keywords": ["notifications", "ntfy", "hooks"],
-  "hooks": "./hooks/hooks.json"
+  "keywords": ["notifications", "ntfy", "hooks"]
 }
