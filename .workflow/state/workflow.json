@@ -1,7 +1,7 @@
 {
-  "phase": "capture",
+  "phase": "plan",
   "status": "complete",
-  "currentTrack": "ntfy-plugin",
+  "currentTrack": "skills",
   "tracks": [
     {
       "id": "ntfy-plugin",
@@ -9,6 +9,12 @@
       "status": "complete",
       "tasks": 7,
       "tasksCompleted": 7
+    },
+    {
+      "id": "skills",
+      "plan": ".workflow/plans/2026-02-09-skills.md",
+      "status": "planned",
+      "tasks": 3
     }
   ],
   "lastUpdated": "2026-02-09"

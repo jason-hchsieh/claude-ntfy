@@ -29,6 +29,9 @@ src/
   types.ts          # NtfyConfig, NtfyMessage interfaces
 tests/              # Test files mirroring src/
 hooks/              # Shell scripts for Claude Code hooks
+skills/
+  setup-server/     # Skill: guide ntfy server setup
+  test-notification/ # Skill: send test notification
 docker/             # Docker compose for self-hosted ntfy
 .workflow/          # Mycelium workflow state (do not edit manually)
 ```
