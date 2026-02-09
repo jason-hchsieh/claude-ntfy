@@ -24,6 +24,6 @@ fi
 INPUT=$(cat)
 STOP_REASON=$(echo "$INPUT" | jq -r '.stop_reason // "completed"' 2>/dev/null || echo "completed")
 
-curl -s "${HEADERS[@]}" -d "Claude Code session ${STOP_REASON}." "$URL" >/dev/null 2>&1 &
+curl -s "${HEADERS[@]}" -d "Claude Code session ${STOP_REASON}." -- "$URL" >/dev/null &
 
 exit 0

@@ -56,4 +56,36 @@ describe("loadConfig", () => {
 
     expect(config.serverUrl).toBe("https://ntfy.example.com");
   });
+
+  it("accepts http:// protocol", () => {
+    process.env.NTFY_SERVER_URL = "http://ntfy.local:8080";
+    process.env.NTFY_TOPIC = "my-topic";
+
+    const config = loadConfig();
+
+    expect(config.serverUrl).toBe("http://ntfy.local:8080");
+  });
+
+  it("accepts https:// protocol", () => {
+    process.env.NTFY_SERVER_URL = "https://ntfy.example.com";
+    process.env.NTFY_TOPIC = "my-topic";
+
+    const config = loadConfig();
+
+    expect(config.serverUrl).toBe("https://ntfy.example.com");
+  });
+
+  it("rejects non-http protocols", () => {
+    process.env.NTFY_SERVER_URL = "file:///etc/passwd";
+    process.env.NTFY_TOPIC = "my-topic";
+
+    expect(() => loadConfig()).toThrow("http");
+  });
+
+  it("rejects invalid URLs", () => {
+    process.env.NTFY_SERVER_URL = "not-a-url";
+    process.env.NTFY_TOPIC = "my-topic";
+
+    expect(() => loadConfig()).toThrow("Invalid");
+  });
 });

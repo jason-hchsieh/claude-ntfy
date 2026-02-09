@@ -24,6 +24,6 @@ fi
 INPUT=$(cat)
 MESSAGE=$(echo "$INPUT" | jq -r '.message // "Notification from Claude Code"' 2>/dev/null || echo "Notification from Claude Code")
 
-curl -s "${HEADERS[@]}" -d "$MESSAGE" "$URL" >/dev/null 2>&1 &
+curl -s "${HEADERS[@]}" -d "$MESSAGE" -- "$URL" >/dev/null &
 
 exit 0

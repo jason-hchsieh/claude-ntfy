@@ -93,4 +93,35 @@ describe("NtfyClient", () => {
 
     await expect(client.publish({ message: "Fail" })).rejects.toThrow("403");
   });
+
+  it("passes an AbortSignal to fetch for timeout", async () => {
+    const mockFetch = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal("fetch", mockFetch);
+
+    client = new NtfyClient(baseConfig);
+    await client.publish({ message: "Hello" });
+
+    const [, options] = mockFetch.mock.calls[0];
+    expect(options.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it("throws on fetch abort (timeout)", async () => {
+    const mockFetch = vi.fn().mockRejectedValue(new DOMException("The operation was aborted", "AbortError"));
+    vi.stubGlobal("fetch", mockFetch);
+
+    client = new NtfyClient(baseConfig);
+
+    await expect(client.publish({ message: "Slow" })).rejects.toThrow("timed out");
+  });
+
+  it("URL-encodes the topic", async () => {
+    const mockFetch = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal("fetch", mockFetch);
+
+    client = new NtfyClient({ ...baseConfig, topic: "my topic/special" });
+    await client.publish({ message: "Hello" });
+
+    const [url] = mockFetch.mock.calls[0];
+    expect(url).toBe("https://ntfy.example.com/my%20topic%2Fspecial");
+  });
 });
