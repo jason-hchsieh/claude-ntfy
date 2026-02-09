@@ -27,32 +27,44 @@ PROJECT=$(echo "$INPUT" | jq -r '.cwd // ""' 2>/dev/null | xargs basename 2>/dev
 case "$EVENT" in
   Stop)
     TITLE="Claude Code finished"
-    MESSAGE="Session completed in ${PROJECT:-unknown project}."
+    MESSAGE="Session completed in **${PROJECT:-unknown project}**."
+    TAGS="white_check_mark"
+    PRIORITY="3"
     ;;
   PermissionRequest)
     TOOL=$(echo "$INPUT" | jq -r '.tool_name // "unknown"' 2>/dev/null || echo "unknown")
     COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null || echo "")
     TITLE="Claude Code needs permission"
     if [[ -n "$COMMAND" ]]; then
-      MESSAGE="${TOOL}: ${COMMAND}"
+      MESSAGE="**${TOOL}** needs approval"$'\n'"\`${COMMAND}\`"
     else
-      MESSAGE="Approve ${TOOL} in ${PROJECT:-unknown project}?"
+      MESSAGE="**${TOOL}** needs approval in **${PROJECT:-unknown project}**"
     fi
+    TAGS="warning"
+    PRIORITY="4"
     ;;
   Notification)
-    TYPE=$(echo "$INPUT" | jq -r '.notification_type // ""' 2>/dev/null || echo "")
     TITLE=$(echo "$INPUT" | jq -r '.title // "Claude Code"' 2>/dev/null || echo "Claude Code")
     MESSAGE=$(echo "$INPUT" | jq -r '.message // "Notification from Claude Code"' 2>/dev/null || echo "Notification from Claude Code")
     if [[ -n "$PROJECT" ]]; then
-      MESSAGE="${MESSAGE} (${PROJECT})"
+      MESSAGE="${MESSAGE}"$'\n'"_${PROJECT}_"
     fi
+    TAGS="bell"
+    PRIORITY="3"
     ;;
   *)
     TITLE="Claude Code"
     MESSAGE=$(echo "$INPUT" | jq -r '.message // "Notification from Claude Code"' 2>/dev/null || echo "Notification from Claude Code")
+    TAGS="robot"
+    PRIORITY="3"
     ;;
 esac
 
-curl -s "${HEADERS[@]}" -H "Title: ${TITLE}" -d "$MESSAGE" -- "$URL" >/dev/null
+curl -s "${HEADERS[@]}" \
+  -H "Title: ${TITLE}" \
+  -H "Tags: ${TAGS}" \
+  -H "Priority: ${PRIORITY}" \
+  -H "Markdown: yes" \
+  -d "$MESSAGE" -- "$URL" >/dev/null
 
 exit 0
