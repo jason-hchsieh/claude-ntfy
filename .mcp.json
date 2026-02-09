@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "claude-ntfy": {
+      "command": "node",
+      "args": ["$CLAUDE_PLUGIN_ROOT/dist/index.js"],
+      "env": {
+        "NTFY_TOPIC": "${NTFY_TOPIC}",
+        "NTFY_SERVER_URL": "${NTFY_SERVER_URL}",
+        "NTFY_TOKEN": "${NTFY_TOKEN}"
+      }
+    }
+  }
+}

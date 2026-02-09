@@ -1,0 +1,13 @@
+{
+  "name": "claude-ntfy",
+  "version": "0.1.0",
+  "description": "Send push notifications from Claude Code sessions via ntfy",
+  "author": {
+    "name": "jason-hchsieh"
+  },
+  "repository": "https://github.com/jason-hchsieh/claude-ntfy",
+  "license": "MIT",
+  "keywords": ["notifications", "ntfy", "hooks", "mcp"],
+  "hooks": "./hooks/hooks.json",
+  "mcpServers": "./.mcp.json"
+}

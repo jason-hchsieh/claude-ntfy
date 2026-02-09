@@ -1,0 +1,24 @@
+{
+  "Stop": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash $CLAUDE_PLUGIN_ROOT/hooks/notify-on-stop.sh",
+          "timeout": 10
+        }
+      ]
+    }
+  ],
+  "Notification": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash $CLAUDE_PLUGIN_ROOT/hooks/notify-on-notification.sh",
+          "timeout": 10
+        }
+      ]
+    }
+  ]
+}
