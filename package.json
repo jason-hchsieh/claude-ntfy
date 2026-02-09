@@ -1,0 +1,23 @@
+{
+  "name": "claude-ntfy",
+  "version": "0.1.0",
+  "description": "A tool to send notifications from Claude Code sessions",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "claude",
+    "ntfy",
+    "notifications"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  }
+}

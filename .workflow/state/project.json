@@ -1,0 +1,10 @@
+{
+  "name": "claude-ntfy",
+  "description": "A tool to send notifications from Claude Code sessions",
+  "type": "greenfield",
+  "language": "typescript",
+  "testFramework": "vitest",
+  "packageManager": "pnpm",
+  "createdAt": "2026-02-09",
+  "setupComplete": true
+}
