@@ -1,7 +1,11 @@
+import { createRequire } from "node:module";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { NtfyClient } from "./ntfy-client.js";
 import { loadConfig } from "./config.js";
+
+const require = createRequire(import.meta.url);
+const { version } = require("../package.json") as { version: string };
 
 export function createServer(): McpServer {
   const config = loadConfig();
@@ -9,7 +13,7 @@ export function createServer(): McpServer {
 
   const server = new McpServer({
     name: "claude-ntfy",
-    version: "0.1.0",
+    version,
   });
 
   server.registerTool("send_notification", {
