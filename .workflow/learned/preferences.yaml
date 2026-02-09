@@ -1,0 +1,7 @@
+packageManager: pnpm
+language: typescript
+testFramework: vitest
+moduleSystem: esm
+nodeVersion: "22+"
+httpClient: native-fetch
+configStyle: environment-variables
