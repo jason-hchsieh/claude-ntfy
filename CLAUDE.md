@@ -28,7 +28,9 @@ src/
   config.ts         # Environment variable config loading
   types.ts          # NtfyConfig, NtfyMessage interfaces
 tests/              # Test files mirroring src/
-hooks/              # Shell scripts for Claude Code hooks
+hooks/
+  notify.sh         # Unified ntfy notification hook (Stop, Notification, PermissionRequest)
+  hooks.json        # Plugin hook configuration
 skills/
   setup-server/     # Skill: guide ntfy server setup
   test-notification/ # Skill: send test notification
