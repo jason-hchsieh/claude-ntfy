@@ -4,6 +4,9 @@
   "description": "A tool to send notifications from Claude Code sessions",
   "type": "module",
   "main": "dist/index.js",
+  "bin": {
+    "claude-ntfy": "dist/index.js"
+  },
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
@@ -17,7 +20,12 @@
   ],
   "license": "MIT",
   "devDependencies": {
+    "@types/node": "^25.2.2",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "zod": "^4.3.6"
   }
 }
