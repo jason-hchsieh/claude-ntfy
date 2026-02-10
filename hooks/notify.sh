@@ -1,16 +1,32 @@
 #!/usr/bin/env bash
 # Claude Code hook: sends ntfy notification for Stop, Notification, and PermissionRequest events.
 #
-# Required env vars:
-#   NTFY_SERVER_URL - ntfy server URL (default: http://localhost:8080)
-#   NTFY_TOPIC      - ntfy topic to publish to
-# Optional env vars:
-#   NTFY_TOKEN      - Bearer token for authentication
+# Configuration can be provided via:
+#   - Environment variables (NTFY_SERVER_URL, NTFY_TOPIC, NTFY_TOKEN)
+#   - Config files (~/.claude-ntfy.json, .claude-ntfy.json, .claude/ntfy.json)
+#
+# Required: NTFY_TOPIC (env var or config file)
+# Optional: NTFY_SERVER_URL (default: http://localhost:8080)
+# Optional: NTFY_TOKEN (for authentication)
 
 set -euo pipefail
 
-NTFY_SERVER_URL="${NTFY_SERVER_URL:-http://localhost:8080}"
-NTFY_TOPIC="${NTFY_TOPIC:?NTFY_TOPIC is required}"
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Source the config loader
+source "${SCRIPT_DIR}/lib/config.sh"
+
+# Load configuration (merges env vars, config files, and defaults)
+CONFIG=$(resolve_config) || {
+  echo "Error: Failed to load configuration" >&2
+  exit 1
+}
+
+# Extract configuration values
+NTFY_SERVER_URL=$(printf '%s' "$CONFIG" | jq -r '.server_url')
+NTFY_TOPIC=$(printf '%s' "$CONFIG" | jq -r '.topic')
+NTFY_TOKEN=$(printf '%s' "$CONFIG" | jq -r '.token // empty')
 
 URL="${NTFY_SERVER_URL}/${NTFY_TOPIC}"
 

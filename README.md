@@ -30,13 +30,38 @@ docker compose up -d
 
 This starts ntfy on `http://localhost:8080`.
 
-### 2. Set environment variables
+### 2. Configure
+
+Choose one method:
+
+**Option A: Environment Variables**
 
 ```bash
 export NTFY_TOPIC="claude-alerts"
 export NTFY_SERVER_URL="http://localhost:8080"  # optional, this is the default
 # export NTFY_TOKEN="tk_your_token"             # optional, for authenticated servers
 ```
+
+**Option B: Configuration File**
+
+Create `~/.claude-ntfy.json`:
+
+```json
+{
+  "server_url": "http://localhost:8080",
+  "topic": "claude-alerts"
+}
+```
+
+Or create a project-specific `.claude-ntfy.json`:
+
+```json
+{
+  "topic": "my-project-alerts"
+}
+```
+
+For more configuration options, see [docs/CONFIG.md](docs/CONFIG.md).
 
 ### 3. Build
 
@@ -133,13 +158,43 @@ The unified `hooks/notify.sh` script handles all events with contextual messages
 | `setup-server` | Guide through ntfy server setup with Docker, env vars, and subscription |
 | `test-notification` | Send a test notification and verify the setup works |
 
-## Environment Variables
+## Configuration Methods
+
+### Environment Variables
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `NTFY_TOPIC` | Yes | — | ntfy topic to publish to |
 | `NTFY_SERVER_URL` | No | `http://localhost:8080` | ntfy server URL |
 | `NTFY_TOKEN` | No | — | Bearer token for authentication |
+
+### Configuration Files
+
+Create JSON configuration files for persistent settings:
+
+**Global User Config** (`~/.claude-ntfy.json`):
+```json
+{
+  "server_url": "http://localhost:8080",
+  "topic": "claude-alerts",
+  "token": "tk_optional_token"
+}
+```
+
+**Project Config** (`.claude-ntfy.json` or `.claude/ntfy.json`):
+```json
+{
+  "topic": "project-specific-topic"
+}
+```
+
+**Precedence** (highest to lowest):
+1. Environment variables
+2. Project config (`.claude-ntfy.json` or `.claude/ntfy.json`)
+3. User config (`~/.claude-ntfy.json`)
+4. Defaults (server: `http://localhost:8080`)
+
+For detailed configuration guide, see [docs/CONFIG.md](docs/CONFIG.md).
 
 ## Development
 
