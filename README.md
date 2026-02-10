@@ -1,15 +1,18 @@
 # claude-ntfy
 
-A Claude Code plugin that sends push notifications via [ntfy](https://ntfy.sh).
+A pure bash Claude Code plugin that sends push notifications via [ntfy](https://ntfy.sh).
 
-Provides two notification channels:
-- **MCP Server** — Claude can call `send_notification` to send notifications on demand
-- **Hooks** — Automatic notifications when Claude stops, requests permission, or sends notification events
+Provides automatic notifications through hooks:
+- **Stop** — Notified when Claude Code session ends
+- **PermissionRequest** — Notified when Claude requests tool approval
+- **Notification** — Notified for other Claude Code events
 
 ## Prerequisites
 
-- Node.js 22+
-- A self-hosted ntfy server (or use the public ntfy.sh service)
+- bash 4.0+
+- jq (for JSON parsing)
+- curl (for HTTP requests)
+- A self-hosted ntfy server (or use the public [ntfy.sh](https://ntfy.sh) service)
 
 ## Install as Plugin
 
@@ -17,7 +20,7 @@ Provides two notification channels:
 claude plugin add /path/to/claude-ntfy
 ```
 
-This registers the MCP server and hooks automatically.
+This registers the notification hooks automatically.
 
 ## Quick Start
 
@@ -63,83 +66,34 @@ Or create a project-specific `.claude-ntfy.json`:
 
 For more configuration options, see [docs/CONFIG.md](docs/CONFIG.md).
 
-### 3. Build
+### 3. Install the Plugin
 
 ```bash
-pnpm install
-pnpm run build
+claude plugin add /path/to/claude-ntfy
 ```
 
-## Manual Configuration
+The plugin will register the notification hooks automatically.
 
-If not using the plugin install, configure each channel manually:
+## How It Works
 
-### MCP Server (on-demand notifications)
+The plugin automatically sends notifications for these Claude Code events:
 
-Add to your Claude Code MCP settings (`~/.claude.json` or project `.mcp.json`):
+1. **Stop** — When your Claude Code session ends
+   - Message: "Claude Code finished"
+   - Example: "Session completed in my-project"
 
-```json
-{
-  "mcpServers": {
-    "claude-ntfy": {
-      "command": "npx",
-      "args": ["claude-ntfy"],
-      "env": {
-        "NTFY_TOPIC": "claude-alerts",
-        "NTFY_SERVER_URL": "http://localhost:8080"
-      }
-    }
-  }
-}
-```
+2. **PermissionRequest** — When Claude requests tool approval
+   - Message: "Claude Code needs permission"
+   - Shows the tool name and command being requested
 
-Claude will then have access to the `send_notification` tool.
+3. **Notification** — For other Claude Code notifications
+   - Forwards the notification title and message
+   - Includes project context
 
-### Hooks (automatic notifications)
-
-Add to `.claude/settings.json` in your project (or `~/.claude/settings.json` globally):
-
-```json
-{
-  "hooks": {
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/absolute/path/to/claude-ntfy/hooks/notify.sh",
-            "timeout": 10
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/absolute/path/to/claude-ntfy/hooks/notify.sh",
-            "timeout": 10
-          }
-        ]
-      }
-    ],
-    "PermissionRequest": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/absolute/path/to/claude-ntfy/hooks/notify.sh",
-            "timeout": 10
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-Make sure the hook environment has `NTFY_TOPIC` (and optionally `NTFY_SERVER_URL`, `NTFY_TOKEN`) set.
+Configuration can be provided via:
+- Environment variables (`NTFY_SERVER_URL`, `NTFY_TOPIC`, `NTFY_TOKEN`)
+- JSON config files (`~/.claude-ntfy.json`, `.claude-ntfy.json`, `.claude/ntfy.json`)
+- Defaults (server: `http://localhost:8080`)
 
 ## Hook Events
 
@@ -198,13 +152,30 @@ For detailed configuration guide, see [docs/CONFIG.md](docs/CONFIG.md).
 
 ## Development
 
+### Verify Script Syntax
+
 ```bash
-pnpm install
-pnpm test            # Run tests
-pnpm test:watch      # Run tests in watch mode
-pnpm run build       # Build
-pnpm run lint        # Type check
+bash -n hooks/lib/config.sh       # Check config loader
+bash -n hooks/notify.sh           # Check notification hook
 ```
+
+### Lint with shellcheck
+
+```bash
+shellcheck hooks/lib/config.sh hooks/notify.sh
+```
+
+### Run Tests
+
+```bash
+# BATS test framework (if installed)
+bats tests/config.sh.bats
+
+# Or run manual tests
+bash tests/config.sh.bats
+```
+
+See [tests/config.sh.bats](tests/config.sh.bats) for comprehensive test coverage.
 
 ## License
 
