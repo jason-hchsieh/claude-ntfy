@@ -14,6 +14,16 @@ This skill helps with two scenarios:
 1. **New Server Setup** - Start a self-hosted ntfy server using Docker
 2. **Existing Server** - Configure claude-ntfy to use an existing ntfy server
 
+## Step 0: Detect Existing Configuration
+
+Before asking anything, run the detect script to see what's already configured:
+
+```bash
+bash "$CLAUDE_PLUGIN_ROOT/scripts/detect-config.sh"
+```
+
+This shows environment variables, config files, resolved configuration, and server connectivity. Use the output to skip steps that are already done and guide the user to what's missing.
+
 ## Step 1: Clarify Setup Type
 
 Ask the user which setup applies to them:

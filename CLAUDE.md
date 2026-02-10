@@ -11,8 +11,10 @@ hooks/
     config.sh       # Configuration loading and merging
   hooks.json        # Plugin hook configuration
 skills/
-  setup-server/     # Skill: guide ntfy server setup
+  setup/            # Skill: guide ntfy setup (server, config, or both)
   test-notification/ # Skill: send test notification
+scripts/
+  detect-config.sh  # Detect and display current ntfy configuration
 docker/             # Docker compose for self-hosted ntfy
 docs/
   CONFIG.md         # Configuration file documentation
@@ -35,7 +37,9 @@ See [docs/CONFIG.md](docs/CONFIG.md) for detailed configuration instructions.
 ```bash
 bash -n hooks/lib/config.sh   # Syntax check config loader
 bash -n hooks/notify.sh       # Syntax check hook script
-shellcheck hooks/lib/config.sh hooks/notify.sh  # Lint (if shellcheck installed)
+bash -n scripts/detect-config.sh  # Syntax check detect script
+shellcheck hooks/lib/config.sh hooks/notify.sh scripts/detect-config.sh  # Lint (if shellcheck installed)
+bash scripts/detect-config.sh # Show current configuration
 ```
 
 ## Conventions
