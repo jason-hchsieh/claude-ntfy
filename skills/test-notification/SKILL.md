@@ -19,7 +19,7 @@ echo "NTFY_SERVER_URL=${NTFY_SERVER_URL:-http://localhost:8080}"
 echo "NTFY_TOPIC=${NTFY_TOPIC:-(not set)}"
 ```
 
-If `NTFY_TOPIC` is not set, ask the user to configure it first (suggest the **setup-server** skill).
+If `NTFY_TOPIC` is not set, ask the user to configure it first (suggest the **setup** skill).
 
 ### 2. Send test notification
 
