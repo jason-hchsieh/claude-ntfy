@@ -26,7 +26,7 @@ docs/
 
 The plugin supports configuration via:
 - **Environment variables** (highest priority): `NTFY_SERVER_URL`, `NTFY_TOPIC`, `NTFY_TOKEN`
-- **Plugin config** (`$CLAUDE_PLUGIN_ROOT/config.json`)
+- **User config** (`$XDG_CONFIG_HOME/claude-ntfy/config.json`, defaults to `~/.config/claude-ntfy/config.json`)
 - **Defaults** (server: `http://localhost:8080`)
 
 See [docs/CONFIG.md](docs/CONFIG.md) for detailed configuration instructions.

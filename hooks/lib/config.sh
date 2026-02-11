@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 # Configuration loading for claude-ntfy
-# Supports: environment variables > plugin config file > defaults
+# Supports: environment variables > user config ($XDG_CONFIG_HOME/claude-ntfy/config.json) > defaults
 
 set -euo pipefail
+
+# XDG Base Directory spec: https://specifications.freedesktop.org/basedir-spec/latest/
+CLAUDE_NTFY_CONFIG_DIR="${XDG_CONFIG_HOME:-${HOME}/.config}/claude-ntfy"
+CLAUDE_NTFY_CONFIG_FILE="${CLAUDE_NTFY_CONFIG_DIR}/config.json"
 
 # Load a single config file
 # Returns JSON object (empty if file missing)
@@ -39,21 +43,12 @@ validate_config() {
 }
 
 # Resolve complete configuration from all sources
-# Precedence: env vars > plugin config ($CLAUDE_PLUGIN_ROOT/config.json) > user config > defaults
+# Precedence: env vars > user config ($XDG_CONFIG_HOME/claude-ntfy/config.json) > defaults
 resolve_config() {
   local config='{}'
 
-  # Load user config (stable across plugin version updates)
-  if [[ -f "${HOME}/.config/claude-ntfy/config.json" ]]; then
-    config=$(load_config "${HOME}/.config/claude-ntfy/config.json") || return 1
-  fi
-
-  # Load plugin config if available (overrides user config)
-  if [[ -n "${CLAUDE_PLUGIN_ROOT:-}" && -f "${CLAUDE_PLUGIN_ROOT}/config.json" ]]; then
-    local plugin_config
-    plugin_config=$(load_config "${CLAUDE_PLUGIN_ROOT}/config.json") || return 1
-    config=$(printf '%s\n%s\n' "$config" "$plugin_config" | jq -cs '.[0] * .[1]')
-  fi
+  # Load user config (XDG compliant, stable across plugin updates)
+  config=$(load_config "$CLAUDE_NTFY_CONFIG_FILE") || return 1
 
   # Apply environment variable overrides (highest priority)
   if [[ -n "${NTFY_SERVER_URL:-}" ]]; then
