@@ -3,7 +3,7 @@
 #
 # Configuration can be provided via:
 #   - Environment variables (NTFY_SERVER_URL, NTFY_TOPIC, NTFY_TOKEN)
-#   - Config files (~/.claude-ntfy.json, .claude-ntfy.json, .claude/ntfy.json)
+#   - Config file ($CLAUDE_PLUGIN_ROOT/config.json)
 #
 # Required: NTFY_TOPIC (env var or config file)
 # Optional: NTFY_SERVER_URL (default: http://localhost:8080)
@@ -37,8 +37,8 @@ else
 fi
 
 INPUT=$(cat)
-EVENT=$(echo "$INPUT" | jq -r '.hook_event_name // ""' 2>/dev/null || echo "")
-PROJECT=$(echo "$INPUT" | jq -r '.cwd // ""' 2>/dev/null | xargs basename 2>/dev/null || echo "")
+EVENT=$(printf '%s' "$INPUT" | jq -r '.hook_event_name // ""' 2>/dev/null || echo "")
+PROJECT=$(printf '%s' "$INPUT" | jq -r '.cwd // ""' 2>/dev/null | xargs basename 2>/dev/null || echo "")
 
 # Get hostname and username for context
 HOSTNAME=$(hostname 2>/dev/null || echo "unknown")
@@ -53,8 +53,8 @@ case "$EVENT" in
     PRIORITY="3"
     ;;
   PermissionRequest)
-    TOOL=$(echo "$INPUT" | jq -r '.tool_name // "unknown"' 2>/dev/null || echo "unknown")
-    COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null || echo "")
+    TOOL=$(printf '%s' "$INPUT" | jq -r '.tool_name // "unknown"' 2>/dev/null || echo "unknown")
+    COMMAND=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null || echo "")
     TITLE="Claude Code needs permission (${USER_HOST})"
     if [[ -n "$COMMAND" ]]; then
       MESSAGE="**${TOOL}** needs approval"$'\n'"\`${COMMAND}\`"$'\n'"_${USER_HOST} in ${PROJECT:-unknown project}_"
@@ -65,8 +65,8 @@ case "$EVENT" in
     PRIORITY="4"
     ;;
   Notification)
-    TITLE=$(echo "$INPUT" | jq -r '.title // "Claude Code"' 2>/dev/null || echo "Claude Code")
-    MESSAGE=$(echo "$INPUT" | jq -r '.message // "Notification from Claude Code"' 2>/dev/null || echo "Notification from Claude Code")
+    TITLE=$(printf '%s' "$INPUT" | jq -r '.title // "Claude Code"' 2>/dev/null || echo "Claude Code")
+    MESSAGE=$(printf '%s' "$INPUT" | jq -r '.message // "Notification from Claude Code"' 2>/dev/null || echo "Notification from Claude Code")
     CONTEXT="_${USER_HOST}"
     if [[ -n "$PROJECT" ]]; then
       CONTEXT="${CONTEXT} in ${PROJECT}"
@@ -77,14 +77,14 @@ case "$EVENT" in
     ;;
   *)
     TITLE="Claude Code (${USER_HOST})"
-    MESSAGE=$(echo "$INPUT" | jq -r '.message // "Notification from Claude Code"' 2>/dev/null || echo "Notification from Claude Code")
+    MESSAGE=$(printf '%s' "$INPUT" | jq -r '.message // "Notification from Claude Code"' 2>/dev/null || echo "Notification from Claude Code")
     MESSAGE="${MESSAGE}"$'\n'"_${USER_HOST}_"
     TAGS="robot"
     PRIORITY="3"
     ;;
 esac
 
-curl -s "${HEADERS[@]}" \
+curl -s ${HEADERS[@]+"${HEADERS[@]}"} \
   -H "Title: ${TITLE}" \
   -H "Tags: ${TAGS}" \
   -H "Priority: ${PRIORITY}" \

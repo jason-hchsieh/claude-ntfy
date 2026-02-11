@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Configuration loading and merging for claude-ntfy
-# Supports JSON config files with environment variable overrides
+# Configuration loading for claude-ntfy
+# Supports: environment variables > plugin config file > defaults
 
 set -euo pipefail
 
@@ -23,43 +23,6 @@ load_config() {
   jq -c '.' "$config_file"
 }
 
-# Merge two JSON objects with override precedence
-_merge_json_objects() {
-  local base="$1"
-  local override="$2"
-
-  printf '%s\n%s\n' "$base" "$override" | jq -cs '[.[0], .[1]] | .[0] * .[1]'
-}
-
-# Merge two JSON config objects (right overwrites left)
-# merge_configs <base_config_json> <override_config_json> [apply_env_vars]
-merge_configs() {
-  local base="${1:-'{}'}"
-  local override="${2:-'{}'}"
-  local apply_env="${3:-false}"
-
-  if [[ -z "$override" ]]; then
-    override='{}'
-  fi
-
-  local merged
-  merged=$(_merge_json_objects "$base" "$override")
-
-  if [[ "$apply_env" == "true" ]]; then
-    if [[ -n "${NTFY_SERVER_URL:-}" ]]; then
-      merged=$(printf '%s' "$merged" | jq --arg url "$NTFY_SERVER_URL" '.server_url = $url')
-    fi
-    if [[ -n "${NTFY_TOPIC:-}" ]]; then
-      merged=$(printf '%s' "$merged" | jq --arg topic "$NTFY_TOPIC" '.topic = $topic')
-    fi
-    if [[ -n "${NTFY_TOKEN:-}" ]]; then
-      merged=$(printf '%s' "$merged" | jq --arg token "$NTFY_TOKEN" '.token = $token')
-    fi
-  fi
-
-  echo "$merged"
-}
-
 # Validate config has required fields
 validate_config() {
   local config="$1"
@@ -76,29 +39,32 @@ validate_config() {
 }
 
 # Resolve complete configuration from all sources
-# Precedence: env vars > project config > user config > defaults
+# Precedence: env vars > plugin config ($CLAUDE_PLUGIN_ROOT/config.json) > defaults
 resolve_config() {
-  local user_config='{}'
-  local project_config='{}'
-  local final_config
+  local config='{}'
 
-  if [[ -f "$HOME/.claude-ntfy.json" ]]; then
-    user_config=$(load_config "$HOME/.claude-ntfy.json") || return 1
+  # Load plugin config file if available
+  if [[ -n "${CLAUDE_PLUGIN_ROOT:-}" && -f "${CLAUDE_PLUGIN_ROOT}/config.json" ]]; then
+    config=$(load_config "${CLAUDE_PLUGIN_ROOT}/config.json") || return 1
   fi
 
-  if [[ -f "./.claude-ntfy.json" ]]; then
-    project_config=$(load_config "./.claude-ntfy.json") || return 1
-  elif [[ -f "./.claude/ntfy.json" ]]; then
-    project_config=$(load_config "./.claude/ntfy.json") || return 1
+  # Apply environment variable overrides (highest priority)
+  if [[ -n "${NTFY_SERVER_URL:-}" ]]; then
+    config=$(printf '%s' "$config" | jq --arg url "$NTFY_SERVER_URL" '.server_url = $url')
+  fi
+  if [[ -n "${NTFY_TOPIC:-}" ]]; then
+    config=$(printf '%s' "$config" | jq --arg topic "$NTFY_TOPIC" '.topic = $topic')
+  fi
+  if [[ -n "${NTFY_TOKEN:-}" ]]; then
+    config=$(printf '%s' "$config" | jq --arg token "$NTFY_TOKEN" '.token = $token')
   fi
 
-  final_config=$(merge_configs "$user_config" "$project_config" "true")
+  # Apply defaults for missing values
+  config=$(printf '%s' "$config" | jq -c '.server_url //= "http://localhost:8080"')
 
-  final_config=$(printf '%s' "$final_config" | jq -c '.server_url //= "http://localhost:8080"')
+  validate_config "$config" || return 1
 
-  validate_config "$final_config" || return 1
-
-  echo "$final_config"
+  echo "$config"
 }
 
 # Get a config value with optional default

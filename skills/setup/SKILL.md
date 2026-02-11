@@ -1,7 +1,7 @@
 ---
 name: setup
 description: Use this skill when the user wants to set up ntfy notifications for claude-ntfy. Triggers on requests like "set up ntfy", "configure notifications", "initialize ntfy", or "setup notification server". Supports both new server setup and configuration of existing servers.
-version: 2.0.0
+version: 3.0.0
 ---
 
 # Setup ntfy Notifications
@@ -10,9 +10,10 @@ Guide the user through setting up ntfy notifications for claude-ntfy. Supports b
 
 ## Overview
 
-This skill helps with two scenarios:
+This skill helps with three scenarios:
 1. **New Server Setup** - Start a self-hosted ntfy server using Docker
 2. **Existing Server** - Configure claude-ntfy to use an existing ntfy server
+3. **Public Service (ntfy.sh)** - Use the free public ntfy.sh service
 
 ## Step 0: Detect Existing Configuration
 
@@ -87,15 +88,11 @@ A. Environment Variables (Temporary)
    export NTFY_TOPIC="claude-alerts"
    export NTFY_SERVER_URL="http://localhost:8080"
 
-B. Configuration File (Persistent)
-   Create ~/.claude-ntfy.json with your settings
-   Good for: Permanent setup, multiple shells
+B. Plugin Config File (Persistent)
+   Create config.json in the plugin directory
+   Good for: Permanent setup, survives shell restarts
 
-C. Project Config (Project-specific)
-   Create .claude-ntfy.json in your project
-   Good for: Team workflows, project-specific topics
-
-Please choose: A, B, or C
+Please choose: A or B
 ```
 
 ### Step 1.4: Set Configuration
@@ -109,15 +106,9 @@ export NTFY_TOPIC="claude-alerts"
 export NTFY_SERVER_URL="http://localhost:8080"
 ```
 
-**If B (User Config File):**
+**If B (Plugin Config File):**
 
-Ask for the topic name, then create `~/.claude-ntfy.json`:
-
-```bash
-mkdir -p ~/.config  # if needed
-```
-
-Create the file with:
+Ask for the topic name, then create `$CLAUDE_PLUGIN_ROOT/config.json`:
 
 ```json
 {
@@ -126,28 +117,12 @@ Create the file with:
 }
 ```
 
-**If C (Project Config File):**
-
-Ask for the topic name, then create `.claude-ntfy.json` in the current directory:
-
-```json
-{
-  "topic": "claude-alerts"
-}
-```
-
-(Server URL will use the default `http://localhost:8080`)
-
 ### Step 1.5: Verify Configuration
 
 Guide through verification:
 
 ```bash
-# Install the plugin if not already installed
-claude plugin add /path/to/claude-ntfy
-
 # Send a test notification
-# Use the test-notification skill or manually test
 curl -H "Title: Test" \
      -d "Claude-ntfy is working!" \
      http://localhost:8080/claude-alerts
@@ -167,15 +142,16 @@ echo "NTFY_SERVER_URL: ${NTFY_SERVER_URL:-not set}"
 echo "NTFY_TOPIC: ${NTFY_TOPIC:-not set}"
 echo "NTFY_TOKEN: ${NTFY_TOKEN:-not set}"
 
-# Check config files
-ls -la ~/.claude-ntfy.json 2>/dev/null || echo "User config not found"
-ls -la .claude-ntfy.json 2>/dev/null || echo "Project config not found"
+# Check plugin config file
+if [[ -n "${CLAUDE_PLUGIN_ROOT:-}" ]]; then
+  cat "${CLAUDE_PLUGIN_ROOT}/config.json" 2>/dev/null || echo "Plugin config not found"
+fi
 ```
 
 If configuration exists, show what was found and ask if user wants to:
 - Keep existing configuration
 - Update it
-- Create a new configuration file
+- Create a new configuration
 
 ### Step 2.2: Gather Server Information
 
@@ -206,58 +182,44 @@ A. Environment Variables (for this shell session)
    export NTFY_TOPIC="<topic>"
    [if token] export NTFY_TOKEN="<token>"
 
-B. User Config File (~/.claude-ntfy.json)
-   Persistent across all projects
-   Stored at: ~/.claude-ntfy.json
+B. Plugin Config File ($CLAUDE_PLUGIN_ROOT/config.json)
+   Persistent across sessions
+   Stored with the plugin
 
-C. Project Config File (.claude-ntfy.json)
-   Project-specific configuration
-   Stored at: ./.claude-ntfy.json
-   Note: Add to .gitignore if using tokens
-
-D. Skip Configuration
-   Use default settings (server: http://localhost:8080)
-
-Please choose: A, B, C, or D
+Please choose: A or B
 ```
 
-### Step 2.4: Create Configuration Files
+### Step 2.4: Create Configuration
 
-**If B (User Config):**
+**If A (Environment Variables):**
 
-Create `~/.claude-ntfy.json`:
+Provide the export commands with the user's values.
 
-```bash
-mkdir -p $(dirname ~/.claude-ntfy.json) 2>/dev/null || true
-cat > ~/.claude-ntfy.json << 'EOF'
+**If B (Plugin Config File):**
+
+Create `$CLAUDE_PLUGIN_ROOT/config.json`:
+
+```json
 {
   "server_url": "<user-provided-url>",
   "topic": "<user-provided-topic>"
-  [if token: , "token": "<user-provided-token>"]
 }
-EOF
-
-chmod 600 ~/.claude-ntfy.json  # Restrict permissions if token is present
 ```
 
-**If C (Project Config):**
+If token is provided, include it:
 
-Create `./.claude-ntfy.json`:
-
-```bash
-cat > ./.claude-ntfy.json << 'EOF'
+```json
 {
   "server_url": "<user-provided-url>",
-  "topic": "<user-provided-topic>"
-  [if token: , "token": "<user-provided-token>"]
+  "topic": "<user-provided-topic>",
+  "token": "<user-provided-token>"
 }
-EOF
 ```
 
-If token is used, add to `.gitignore`:
+If token is included, set restrictive permissions:
 
 ```bash
-echo ".claude-ntfy.json" >> .gitignore
+chmod 600 "$CLAUDE_PLUGIN_ROOT/config.json"
 ```
 
 ### Step 2.5: Verify Connection
@@ -265,12 +227,8 @@ echo ".claude-ntfy.json" >> .gitignore
 Test the configuration:
 
 ```bash
-# Check configuration is recognized
-echo "NTFY_SERVER_URL: ${NTFY_SERVER_URL:-not set}"
-echo "NTFY_TOPIC: ${NTFY_TOPIC:-not set}"
-
 # Test connectivity
-curl -I "${NTFY_SERVER_URL:-http://localhost:8080}/v1/health"
+curl -I "<server-url>/v1/health"
 ```
 
 Expected: HTTP 200 response
@@ -300,7 +258,7 @@ export NTFY_SERVER_URL="https://ntfy.sh"
 export NTFY_TOPIC="<user-chosen-topic>"
 ```
 
-Or in `~/.claude-ntfy.json`:
+Or in `$CLAUDE_PLUGIN_ROOT/config.json`:
 
 ```json
 {
@@ -313,9 +271,7 @@ Or in `~/.claude-ntfy.json`:
 
 ## Configuration File Format Reference
 
-### ~/.claude-ntfy.json (Global User Config)
-
-Persistent across all projects:
+### $CLAUDE_PLUGIN_ROOT/config.json
 
 ```json
 {
@@ -325,31 +281,21 @@ Persistent across all projects:
 }
 ```
 
-### .claude-ntfy.json (Project Config)
-
-Project-specific settings:
-
-```json
-{
-  "topic": "my-project-alerts"
-}
-```
-
-(Will use server_url default: `http://localhost:8080`)
+| Field | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `server_url` | No | `http://localhost:8080` | ntfy server URL |
+| `topic` | Yes | — | ntfy topic to publish to |
+| `token` | No | — | Bearer token for authentication |
 
 ---
 
 ## Configuration Precedence
 
-When Claude-ntfy loads, it uses this precedence (highest to lowest):
+When claude-ntfy loads, it uses this precedence (highest to lowest):
 
 1. **Environment variables** (`NTFY_SERVER_URL`, `NTFY_TOPIC`, `NTFY_TOKEN`)
-2. **Project config** (`.claude-ntfy.json` in current directory)
-3. **Project alternate** (`.claude/ntfy.json` in current directory)
-4. **User config** (`~/.claude-ntfy.json`)
-5. **Defaults** (server: `http://localhost:8080`)
-
-This means environment variables always override config files, and project config overrides user config.
+2. **Plugin config** (`$CLAUDE_PLUGIN_ROOT/config.json`)
+3. **Defaults** (server: `http://localhost:8080`)
 
 ---
 
@@ -393,12 +339,11 @@ After setup is complete:
 echo "Server: ${NTFY_SERVER_URL:-not set}"
 echo "Topic: ${NTFY_TOPIC:-not set}"
 
-# Check config files
-cat ~/.claude-ntfy.json 2>/dev/null || echo "User config not found"
-cat .claude-ntfy.json 2>/dev/null || echo "Project config not found"
+# Check plugin config file
+cat "${CLAUDE_PLUGIN_ROOT}/config.json" 2>/dev/null || echo "Plugin config not found"
 ```
 
-Precedence: env vars > project config > user config > defaults
+Precedence: env vars > plugin config > defaults
 
 ### Server connection issues
 

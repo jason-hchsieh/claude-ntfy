@@ -47,7 +47,7 @@ export NTFY_SERVER_URL="http://localhost:8080"  # optional, this is the default
 
 **Option B: Configuration File**
 
-Create `~/.claude-ntfy.json`:
+Create `config.json` in the plugin directory (`$CLAUDE_PLUGIN_ROOT/config.json`):
 
 ```json
 {
@@ -56,13 +56,7 @@ Create `~/.claude-ntfy.json`:
 }
 ```
 
-Or create a project-specific `.claude-ntfy.json`:
-
-```json
-{
-  "topic": "my-project-alerts"
-}
-```
+Use the `/setup` skill to create this file interactively.
 
 For more configuration options, see [docs/CONFIG.md](docs/CONFIG.md).
 
@@ -92,7 +86,7 @@ The plugin automatically sends notifications for these Claude Code events:
 
 Configuration can be provided via:
 - Environment variables (`NTFY_SERVER_URL`, `NTFY_TOPIC`, `NTFY_TOKEN`)
-- JSON config files (`~/.claude-ntfy.json`, `.claude-ntfy.json`, `.claude/ntfy.json`)
+- Plugin config file (`$CLAUDE_PLUGIN_ROOT/config.json`)
 - Defaults (server: `http://localhost:8080`)
 
 ## Hook Events
@@ -109,7 +103,7 @@ The unified `hooks/notify.sh` script handles all events with contextual messages
 
 | Skill | Description |
 |-------|-------------|
-| `setup-server` | Guide through ntfy server setup with Docker, env vars, and subscription |
+| `setup` | Guide through ntfy server setup with Docker, env vars, and subscription |
 | `test-notification` | Send a test notification and verify the setup works |
 
 ## Configuration Methods
@@ -122,11 +116,11 @@ The unified `hooks/notify.sh` script handles all events with contextual messages
 | `NTFY_SERVER_URL` | No | `http://localhost:8080` | ntfy server URL |
 | `NTFY_TOKEN` | No | — | Bearer token for authentication |
 
-### Configuration Files
+### Configuration File
 
-Create JSON configuration files for persistent settings:
+Create `config.json` in the plugin directory for persistent settings:
 
-**Global User Config** (`~/.claude-ntfy.json`):
+**Plugin Config** (`$CLAUDE_PLUGIN_ROOT/config.json`):
 ```json
 {
   "server_url": "http://localhost:8080",
@@ -135,18 +129,10 @@ Create JSON configuration files for persistent settings:
 }
 ```
 
-**Project Config** (`.claude-ntfy.json` or `.claude/ntfy.json`):
-```json
-{
-  "topic": "project-specific-topic"
-}
-```
-
 **Precedence** (highest to lowest):
 1. Environment variables
-2. Project config (`.claude-ntfy.json` or `.claude/ntfy.json`)
-3. User config (`~/.claude-ntfy.json`)
-4. Defaults (server: `http://localhost:8080`)
+2. Plugin config (`$CLAUDE_PLUGIN_ROOT/config.json`)
+3. Defaults (server: `http://localhost:8080`)
 
 For detailed configuration guide, see [docs/CONFIG.md](docs/CONFIG.md).
 

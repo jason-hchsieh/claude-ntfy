@@ -1,6 +1,6 @@
 # Configuration
 
-claude-ntfy can be configured via JSON configuration files or environment variables. Environment variables take precedence over configuration files.
+claude-ntfy can be configured via environment variables or a plugin config file.
 
 ## Quick Start
 
@@ -15,25 +15,19 @@ export NTFY_TOKEN="tk_your_token"
 
 For persistent configuration, create a config file.
 
-## Configuration Files
+## Configuration File
 
-### File Locations (search order)
+### Location
 
-claude-ntfy looks for configuration files in this order:
+claude-ntfy reads configuration from:
 
-1. **Project-level config** (highest priority after env vars):
-   - `.claude-ntfy.json` (project root)
-   - `.claude/ntfy.json` (Claude Code settings directory)
+```
+$CLAUDE_PLUGIN_ROOT/config.json
+```
 
-2. **User-level config**:
-   - `~/.claude-ntfy.json` (user home directory)
+`$CLAUDE_PLUGIN_ROOT` is set by Claude Code to the plugin's installation directory. Use the `/setup` skill to create this file automatically.
 
-3. **Defaults**:
-   - Server: `http://localhost:8080`
-
-The **first file found** is used. Only **environment variables override** configuration files.
-
-### Configuration Schema
+### Schema
 
 ```json
 {
@@ -53,11 +47,32 @@ The **first file found** is used. Only **environment variables override** config
 
 *Required unless provided via `NTFY_TOPIC` environment variable.
 
+## Environment Variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `NTFY_TOPIC` | Yes | — | ntfy topic to publish to |
+| `NTFY_SERVER_URL` | No | `http://localhost:8080` | ntfy server URL |
+| `NTFY_TOKEN` | No | — | Bearer token for authentication |
+
+## Precedence (highest to lowest)
+
+1. **Environment Variables** (if set)
+   - `NTFY_SERVER_URL`
+   - `NTFY_TOPIC`
+   - `NTFY_TOKEN`
+
+2. **Plugin Config**
+   - `$CLAUDE_PLUGIN_ROOT/config.json`
+
+3. **Defaults**
+   - `server_url`: `http://localhost:8080`
+
 ## Examples
 
-### Global User Configuration
+### Config File
 
-Save to `~/.claude-ntfy.json`:
+Create `config.json` in the plugin directory:
 
 ```json
 {
@@ -67,98 +82,33 @@ Save to `~/.claude-ntfy.json`:
 }
 ```
 
-### Project-Specific Configuration
+### Environment Variable Override
 
-Save to `.claude-ntfy.json` in your project root:
-
-```json
-{
-  "server_url": "http://localhost:8080",
-  "topic": "my-project-alerts"
-}
-```
-
-Or in `.claude/ntfy.json`:
-
-```json
-{
-  "topic": "claude-dev-alerts"
-}
-```
-
-### With Environment Variables
-
-Environment variables **always** take precedence:
+Environment variables **always** take precedence over the config file:
 
 ```bash
-# This will override topic from config files
+# This will override topic from config file
 export NTFY_TOPIC="override-topic"
 
 # But server_url will come from config file
 ```
 
-## Precedence (highest to lowest)
+## Migration from ~/.claude-ntfy.json
 
-1. **Environment Variables** (if set)
-   - `NTFY_SERVER_URL`
-   - `NTFY_TOPIC`
-   - `NTFY_TOKEN`
-
-2. **Project Config** (first found)
-   - `.claude-ntfy.json`
-   - `.claude/ntfy.json`
-
-3. **User Config**
-   - `~/.claude-ntfy.json`
-
-4. **Defaults**
-   - `server_url`: `http://localhost:8080`
-
-## Migration from Environment Variables
-
-If you're currently using only environment variables, here's how to migrate:
-
-### Before (env vars only)
+If you previously used `~/.claude-ntfy.json`, move it to the plugin directory:
 
 ```bash
-export NTFY_TOPIC="claude-alerts"
-export NTFY_SERVER_URL="https://ntfy.example.com"
-export NTFY_TOKEN="tk_abc123xyz"
-```
+# Find your plugin root
+# It's typically at ~/.claude/plugins/cache/<plugin-path>
 
-### After (config file)
+# Copy your config
+cp ~/.claude-ntfy.json "$CLAUDE_PLUGIN_ROOT/config.json"
 
-Create `~/.claude-ntfy.json`:
-
-```json
-{
-  "server_url": "https://ntfy.example.com",
-  "topic": "claude-alerts",
-  "token": "tk_abc123xyz"
-}
-```
-
-Then you only need:
-```bash
-# NTFY_TOPIC is now optional (read from config)
-# Or override for specific shells/projects
+# Or use the /setup skill to reconfigure
 ```
 
 ## Configuration Validation
 
 - **Invalid JSON**: Configuration file will be skipped with a warning
-- **Missing required `topic`**: An error will be shown if neither a config file nor `NTFY_TOPIC` env var is set
-- **Missing config files**: Not an error — the next location is checked
-
-## Debugging
-
-To see which configuration is being used, set `NTFY_DEBUG=1`:
-
-```bash
-NTFY_DEBUG=1 /path/to/claude-ntfy/hooks/notify.sh < event.json
-```
-
-This will show:
-- Which config files were checked
-- Which values were loaded
-- Final resolved configuration
+- **Missing required `topic`**: An error will be shown if neither config file nor `NTFY_TOPIC` env var provides it
+- **Missing config file**: Not an error — defaults and env vars are used
