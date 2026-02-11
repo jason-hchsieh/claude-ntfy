@@ -40,9 +40,9 @@ else
   notfound "NTFY_TOKEN" "(not set)"
 fi
 
-# ── Plugin Config File ────────────────────────────────────────────
+# ── Config Files ──────────────────────────────────────────────────
 
-header "Plugin Config File"
+header "Config Files"
 
 show_config_file() {
   local label="$1" path="$2"
@@ -64,6 +64,8 @@ show_config_file() {
     notfound "$label" "$path (not found)"
   fi
 }
+
+show_config_file "User config" "${HOME}/.config/claude-ntfy/config.json"
 
 if [[ -n "${CLAUDE_PLUGIN_ROOT:-}" ]]; then
   show_config_file "Plugin config" "${CLAUDE_PLUGIN_ROOT}/config.json"

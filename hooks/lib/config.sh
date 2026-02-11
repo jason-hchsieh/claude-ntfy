@@ -39,13 +39,20 @@ validate_config() {
 }
 
 # Resolve complete configuration from all sources
-# Precedence: env vars > plugin config ($CLAUDE_PLUGIN_ROOT/config.json) > defaults
+# Precedence: env vars > plugin config ($CLAUDE_PLUGIN_ROOT/config.json) > user config > defaults
 resolve_config() {
   local config='{}'
 
-  # Load plugin config file if available
+  # Load user config (stable across plugin version updates)
+  if [[ -f "${HOME}/.config/claude-ntfy/config.json" ]]; then
+    config=$(load_config "${HOME}/.config/claude-ntfy/config.json") || return 1
+  fi
+
+  # Load plugin config if available (overrides user config)
   if [[ -n "${CLAUDE_PLUGIN_ROOT:-}" && -f "${CLAUDE_PLUGIN_ROOT}/config.json" ]]; then
-    config=$(load_config "${CLAUDE_PLUGIN_ROOT}/config.json") || return 1
+    local plugin_config
+    plugin_config=$(load_config "${CLAUDE_PLUGIN_ROOT}/config.json") || return 1
+    config=$(printf '%s\n%s\n' "$config" "$plugin_config" | jq -cs '.[0] * .[1]')
   fi
 
   # Apply environment variable overrides (highest priority)
