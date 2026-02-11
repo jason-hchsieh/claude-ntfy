@@ -44,25 +44,34 @@ else
   notfound "NTFY_TOKEN" "(not set)"
 fi
 
-# ── User Config File ─────────────────────────────────────────────
+# ── Config Files ──────────────────────────────────────────────────
 
-header "User Config File"
+header "Config Files"
 
-if [[ -f "$CLAUDE_NTFY_CONFIG_FILE" ]]; then
-  if jq empty "$CLAUDE_NTFY_CONFIG_FILE" 2>/dev/null; then
-    found "Config" "$CLAUDE_NTFY_CONFIG_FILE"
-    server=$(jq -r '.server_url // empty' "$CLAUDE_NTFY_CONFIG_FILE")
-    topic=$(jq -r '.topic // empty' "$CLAUDE_NTFY_CONFIG_FILE")
-    token=$(jq -r '.token // empty' "$CLAUDE_NTFY_CONFIG_FILE")
-    [[ -n "$server" ]] && printf "    server_url: %s\n" "$server" || true
-    [[ -n "$topic" ]]  && printf "    topic:      %s\n" "$topic" || true
-    [[ -n "$token" ]]  && printf "    token:      (set, hidden)\n" || true
+CLAUDE_DIR_CONFIG="${HOME}/.claude/claude-ntfy/config.json"
+
+show_config_file() {
+  local label="$1" path="$2"
+  if [[ -f "$path" ]]; then
+    if jq empty "$path" 2>/dev/null; then
+      found "$label" "$path"
+      local server topic token
+      server=$(jq -r '.server_url // empty' "$path")
+      topic=$(jq -r '.topic // empty' "$path")
+      token=$(jq -r '.token // empty' "$path")
+      [[ -n "$server" ]] && printf "    server_url: %s\n" "$server" || true
+      [[ -n "$topic" ]]  && printf "    topic:      %s\n" "$topic" || true
+      [[ -n "$token" ]]  && printf "    token:      (set, hidden)\n" || true
+    else
+      err "$label" "$path (invalid JSON!)"
+    fi
   else
-    err "Config" "$CLAUDE_NTFY_CONFIG_FILE (invalid JSON!)"
+    notfound "$label" "$path (not found)"
   fi
-else
-  notfound "Config" "$CLAUDE_NTFY_CONFIG_FILE (not found)"
-fi
+}
+
+show_config_file "XDG config" "$CLAUDE_NTFY_CONFIG_FILE"
+show_config_file "Claude dir config" "$CLAUDE_DIR_CONFIG"
 
 # ── Resolved Configuration ─────────────────────────────────────────
 

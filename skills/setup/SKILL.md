@@ -1,7 +1,7 @@
 ---
 name: setup
 description: Use this skill when the user wants to set up ntfy notifications for claude-ntfy. Triggers on requests like "set up ntfy", "configure notifications", "initialize ntfy", or "setup notification server". Supports both new server setup and configuration of existing servers.
-version: 3.0.0
+version: 3.1.0
 ---
 
 # Setup ntfy Notifications
@@ -88,8 +88,8 @@ A. Environment Variables (Temporary)
    export NTFY_TOPIC="claude-alerts"
    export NTFY_SERVER_URL="http://localhost:8080"
 
-B. Plugin Config File (Persistent)
-   Create config.json in the plugin directory
+B. Config File (Persistent)
+   Create ~/.config/claude-ntfy/config.json
    Good for: Permanent setup, survives shell restarts
 
 Please choose: A or B
@@ -106,9 +106,13 @@ export NTFY_TOPIC="claude-alerts"
 export NTFY_SERVER_URL="http://localhost:8080"
 ```
 
-**If B (Plugin Config File):**
+**If B (Config File):**
 
-Ask for the topic name, then create `$CLAUDE_PLUGIN_ROOT/config.json`:
+Ask for the topic name, then create `~/.config/claude-ntfy/config.json`:
+
+```bash
+mkdir -p ~/.config/claude-ntfy
+```
 
 ```json
 {
@@ -134,18 +138,10 @@ curl -H "Title: Test" \
 
 ### Step 2.1: Detect Existing Configuration
 
-Check for existing configuration:
+Run the detect script to check for existing configuration:
 
 ```bash
-# Check environment variables
-echo "NTFY_SERVER_URL: ${NTFY_SERVER_URL:-not set}"
-echo "NTFY_TOPIC: ${NTFY_TOPIC:-not set}"
-echo "NTFY_TOKEN: ${NTFY_TOKEN:-not set}"
-
-# Check plugin config file
-if [[ -n "${CLAUDE_PLUGIN_ROOT:-}" ]]; then
-  cat "${CLAUDE_PLUGIN_ROOT}/config.json" 2>/dev/null || echo "Plugin config not found"
-fi
+bash "$CLAUDE_PLUGIN_ROOT/scripts/detect-config.sh"
 ```
 
 If configuration exists, show what was found and ask if user wants to:
@@ -182,9 +178,9 @@ A. Environment Variables (for this shell session)
    export NTFY_TOPIC="<topic>"
    [if token] export NTFY_TOKEN="<token>"
 
-B. Plugin Config File ($CLAUDE_PLUGIN_ROOT/config.json)
+B. Config File (~/.config/claude-ntfy/config.json)
    Persistent across sessions
-   Stored with the plugin
+   Follows XDG Base Directory specification
 
 Please choose: A or B
 ```
@@ -195,9 +191,13 @@ Please choose: A or B
 
 Provide the export commands with the user's values.
 
-**If B (Plugin Config File):**
+**If B (Config File):**
 
-Create `$CLAUDE_PLUGIN_ROOT/config.json`:
+Create `~/.config/claude-ntfy/config.json`:
+
+```bash
+mkdir -p ~/.config/claude-ntfy
+```
 
 ```json
 {
@@ -219,7 +219,7 @@ If token is provided, include it:
 If token is included, set restrictive permissions:
 
 ```bash
-chmod 600 "$CLAUDE_PLUGIN_ROOT/config.json"
+chmod 600 ~/.config/claude-ntfy/config.json
 ```
 
 ### Step 2.5: Verify Connection
@@ -258,7 +258,7 @@ export NTFY_SERVER_URL="https://ntfy.sh"
 export NTFY_TOPIC="<user-chosen-topic>"
 ```
 
-Or in `$CLAUDE_PLUGIN_ROOT/config.json`:
+Or in `~/.config/claude-ntfy/config.json`:
 
 ```json
 {
@@ -271,7 +271,12 @@ Or in `$CLAUDE_PLUGIN_ROOT/config.json`:
 
 ## Configuration File Format Reference
 
-### $CLAUDE_PLUGIN_ROOT/config.json
+### Config File Locations
+
+claude-ntfy looks for config files in this order (later files override earlier ones):
+
+1. `~/.claude/claude-ntfy/config.json` (Claude-native path)
+2. `~/.config/claude-ntfy/config.json` (XDG Base Directory spec)
 
 ```json
 {
@@ -294,8 +299,9 @@ Or in `$CLAUDE_PLUGIN_ROOT/config.json`:
 When claude-ntfy loads, it uses this precedence (highest to lowest):
 
 1. **Environment variables** (`NTFY_SERVER_URL`, `NTFY_TOPIC`, `NTFY_TOKEN`)
-2. **Plugin config** (`$CLAUDE_PLUGIN_ROOT/config.json`)
-3. **Defaults** (server: `http://localhost:8080`)
+2. **XDG config** (`~/.config/claude-ntfy/config.json`)
+3. **Claude dir config** (`~/.claude/claude-ntfy/config.json`)
+4. **Defaults** (server: `http://localhost:8080`)
 
 ---
 
@@ -335,15 +341,11 @@ After setup is complete:
 ### Configuration not being recognized
 
 ```bash
-# Check current configuration
-echo "Server: ${NTFY_SERVER_URL:-not set}"
-echo "Topic: ${NTFY_TOPIC:-not set}"
-
-# Check plugin config file
-cat "${CLAUDE_PLUGIN_ROOT}/config.json" 2>/dev/null || echo "Plugin config not found"
+# Run the detect script to see all config sources
+bash "$CLAUDE_PLUGIN_ROOT/scripts/detect-config.sh"
 ```
 
-Precedence: env vars > plugin config > defaults
+Precedence: env vars > XDG config > ~/.claude/ config > defaults
 
 ### Server connection issues
 

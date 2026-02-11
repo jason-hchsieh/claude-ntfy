@@ -3,7 +3,7 @@
 #
 # Configuration can be provided via:
 #   - Environment variables (NTFY_SERVER_URL, NTFY_TOPIC, NTFY_TOKEN)
-#   - Config file ($CLAUDE_PLUGIN_ROOT/config.json)
+#   - Config file (~/.config/claude-ntfy/config.json or ~/.claude/claude-ntfy/config.json)
 #
 # Required: NTFY_TOPIC (env var or config file)
 # Optional: NTFY_SERVER_URL (default: http://localhost:8080)

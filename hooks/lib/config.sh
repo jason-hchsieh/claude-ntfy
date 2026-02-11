@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Configuration loading for claude-ntfy
-# Supports: environment variables > user config ($XDG_CONFIG_HOME/claude-ntfy/config.json) > defaults
+# Supports: env vars > XDG config > ~/.claude/ config > defaults
 
 set -euo pipefail
 
@@ -43,12 +43,19 @@ validate_config() {
 }
 
 # Resolve complete configuration from all sources
-# Precedence: env vars > user config ($XDG_CONFIG_HOME/claude-ntfy/config.json) > defaults
+# Precedence: env vars > XDG config > ~/.claude/claude-ntfy config > defaults
 resolve_config() {
   local config='{}'
 
-  # Load user config (XDG compliant, stable across plugin updates)
-  config=$(load_config "$CLAUDE_NTFY_CONFIG_FILE") || return 1
+  # Load from ~/.claude/claude-ntfy/ (Claude-native path, lowest file priority)
+  config=$(load_config "${HOME}/.claude/claude-ntfy/config.json") || return 1
+
+  # Load XDG config (overrides ~/.claude/ if both exist)
+  if [[ -f "$CLAUDE_NTFY_CONFIG_FILE" ]]; then
+    local xdg_config
+    xdg_config=$(load_config "$CLAUDE_NTFY_CONFIG_FILE") || return 1
+    config=$(printf '%s\n%s\n' "$config" "$xdg_config" | jq -cs '.[0] * .[1]')
+  fi
 
   # Apply environment variable overrides (highest priority)
   if [[ -n "${NTFY_SERVER_URL:-}" ]]; then

@@ -1,6 +1,6 @@
 # Configuration
 
-claude-ntfy can be configured via environment variables or a plugin config file.
+claude-ntfy can be configured via environment variables or config files.
 
 ## Quick Start
 
@@ -15,17 +15,30 @@ export NTFY_TOKEN="tk_your_token"
 
 For persistent configuration, create a config file.
 
-## Configuration File
+## Configuration Files
 
-### Location
+### Locations
 
-claude-ntfy reads configuration from:
+claude-ntfy searches for config files in this order (later files override earlier ones):
 
+1. **`~/.claude/claude-ntfy/config.json`** — Claude-native path
+2. **`~/.config/claude-ntfy/config.json`** — XDG Base Directory spec (`$XDG_CONFIG_HOME/claude-ntfy/config.json`)
+
+The recommended location is `~/.config/claude-ntfy/config.json` (XDG-compliant).
+
+### Creating a Config File
+
+```bash
+mkdir -p ~/.config/claude-ntfy
+cat > ~/.config/claude-ntfy/config.json << 'EOF'
+{
+  "server_url": "http://localhost:8080",
+  "topic": "claude-alerts"
+}
+EOF
 ```
-$CLAUDE_PLUGIN_ROOT/config.json
-```
 
-`$CLAUDE_PLUGIN_ROOT` is set by Claude Code to the plugin's installation directory. Use the `/setup` skill to create this file automatically.
+Or use the `/setup` skill to create this file interactively.
 
 ### Schema
 
@@ -62,17 +75,20 @@ $CLAUDE_PLUGIN_ROOT/config.json
    - `NTFY_TOPIC`
    - `NTFY_TOKEN`
 
-2. **Plugin Config**
-   - `$CLAUDE_PLUGIN_ROOT/config.json`
+2. **XDG Config**
+   - `~/.config/claude-ntfy/config.json`
 
-3. **Defaults**
+3. **Claude Dir Config**
+   - `~/.claude/claude-ntfy/config.json`
+
+4. **Defaults**
    - `server_url`: `http://localhost:8080`
 
 ## Examples
 
-### Config File
+### XDG Config File
 
-Create `config.json` in the plugin directory:
+Create `~/.config/claude-ntfy/config.json`:
 
 ```json
 {
@@ -82,9 +98,22 @@ Create `config.json` in the plugin directory:
 }
 ```
 
+### Claude Dir Config File
+
+Alternatively, create `~/.claude/claude-ntfy/config.json`:
+
+```json
+{
+  "server_url": "https://ntfy.example.com",
+  "topic": "my-alerts"
+}
+```
+
+Note: If both files exist, XDG config takes priority over Claude dir config.
+
 ### Environment Variable Override
 
-Environment variables **always** take precedence over the config file:
+Environment variables **always** take precedence over config files:
 
 ```bash
 # This will override topic from config file
@@ -93,19 +122,19 @@ export NTFY_TOPIC="override-topic"
 # But server_url will come from config file
 ```
 
-## Migration from ~/.claude-ntfy.json
+## Detecting Configuration
 
-If you previously used `~/.claude-ntfy.json`, move it to the plugin directory:
+Run the detect script to see all config sources and the resolved configuration:
 
 ```bash
-# Find your plugin root
-# It's typically at ~/.claude/plugins/cache/<plugin-path>
-
-# Copy your config
-cp ~/.claude-ntfy.json "$CLAUDE_PLUGIN_ROOT/config.json"
-
-# Or use the /setup skill to reconfigure
+bash scripts/detect-config.sh
 ```
+
+This shows:
+- Environment variables (set or not)
+- Config files found and their contents
+- Final resolved configuration
+- Server connectivity status
 
 ## Configuration Validation
 

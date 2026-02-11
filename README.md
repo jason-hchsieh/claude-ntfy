@@ -45,9 +45,13 @@ export NTFY_SERVER_URL="http://localhost:8080"  # optional, this is the default
 # export NTFY_TOKEN="tk_your_token"             # optional, for authenticated servers
 ```
 
-**Option B: Configuration File**
+**Option B: Config File**
 
-Create `config.json` in the plugin directory (`$CLAUDE_PLUGIN_ROOT/config.json`):
+Create `~/.config/claude-ntfy/config.json` (XDG-compliant):
+
+```bash
+mkdir -p ~/.config/claude-ntfy
+```
 
 ```json
 {
@@ -55,6 +59,8 @@ Create `config.json` in the plugin directory (`$CLAUDE_PLUGIN_ROOT/config.json`)
   "topic": "claude-alerts"
 }
 ```
+
+Or use `~/.claude/claude-ntfy/config.json` as an alternative location.
 
 Use the `/setup` skill to create this file interactively.
 
@@ -86,7 +92,8 @@ The plugin automatically sends notifications for these Claude Code events:
 
 Configuration can be provided via:
 - Environment variables (`NTFY_SERVER_URL`, `NTFY_TOPIC`, `NTFY_TOKEN`)
-- Plugin config file (`$CLAUDE_PLUGIN_ROOT/config.json`)
+- XDG config file (`~/.config/claude-ntfy/config.json`)
+- Claude dir config file (`~/.claude/claude-ntfy/config.json`)
 - Defaults (server: `http://localhost:8080`)
 
 ## Hook Events
@@ -116,11 +123,11 @@ The unified `hooks/notify.sh` script handles all events with contextual messages
 | `NTFY_SERVER_URL` | No | `http://localhost:8080` | ntfy server URL |
 | `NTFY_TOKEN` | No | — | Bearer token for authentication |
 
-### Configuration File
+### Config Files
 
-Create `config.json` in the plugin directory for persistent settings:
+Create a config file for persistent settings:
 
-**Plugin Config** (`$CLAUDE_PLUGIN_ROOT/config.json`):
+**XDG Config** (`~/.config/claude-ntfy/config.json`) — recommended:
 ```json
 {
   "server_url": "http://localhost:8080",
@@ -129,10 +136,19 @@ Create `config.json` in the plugin directory for persistent settings:
 }
 ```
 
+**Claude Dir Config** (`~/.claude/claude-ntfy/config.json`) — alternative:
+```json
+{
+  "server_url": "http://localhost:8080",
+  "topic": "claude-alerts"
+}
+```
+
 **Precedence** (highest to lowest):
 1. Environment variables
-2. Plugin config (`$CLAUDE_PLUGIN_ROOT/config.json`)
-3. Defaults (server: `http://localhost:8080`)
+2. XDG config (`~/.config/claude-ntfy/config.json`)
+3. Claude dir config (`~/.claude/claude-ntfy/config.json`)
+4. Defaults (server: `http://localhost:8080`)
 
 For detailed configuration guide, see [docs/CONFIG.md](docs/CONFIG.md).
 
