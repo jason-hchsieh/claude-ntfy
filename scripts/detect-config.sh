@@ -7,9 +7,9 @@ set -euo pipefail
 # Colors (disabled if not a terminal)
 if [[ -t 1 ]]; then
   BOLD='\033[1m' DIM='\033[2m' GREEN='\033[32m' YELLOW='\033[33m'
-  RED='\033[31m' CYAN='\033[36m' RESET='\033[0m'
+  RED='\033[31m' RESET='\033[0m'
 else
-  BOLD='' DIM='' GREEN='' YELLOW='' RED='' CYAN='' RESET=''
+  BOLD='' DIM='' GREEN='' YELLOW='' RED='' RESET=''
 fi
 
 header() { printf "\n${BOLD}%s${RESET}\n" "$1"; }
@@ -40,9 +40,9 @@ else
   notfound "NTFY_TOKEN" "(not set)"
 fi
 
-# ── Config Files ───────────────────────────────────────────────────
+# ── Plugin Config File ────────────────────────────────────────────
 
-header "Config Files"
+header "Plugin Config File"
 
 show_config_file() {
   local label="$1" path="$2"
@@ -50,7 +50,6 @@ show_config_file() {
   if [[ -f "$path" ]]; then
     if jq empty "$path" 2>/dev/null; then
       found "$label" "$path"
-      # Show fields
       local server topic token
       server=$(jq -r '.server_url // empty' "$path")
       topic=$(jq -r '.topic // empty' "$path")
@@ -66,9 +65,11 @@ show_config_file() {
   fi
 }
 
-show_config_file "User config"        "$HOME/.claude-ntfy.json"
-show_config_file "Project config"     "./.claude-ntfy.json"
-show_config_file "Project alt config" "./.claude/ntfy.json"
+if [[ -n "${CLAUDE_PLUGIN_ROOT:-}" ]]; then
+  show_config_file "Plugin config" "${CLAUDE_PLUGIN_ROOT}/config.json"
+else
+  warn "CLAUDE_PLUGIN_ROOT" "(not set — run from Claude Code plugin context)"
+fi
 
 # ── Resolved Configuration ─────────────────────────────────────────
 
@@ -92,7 +93,7 @@ if [[ -f "$CONFIG_LIB" ]]; then
       notfound "token" "(not set)"
     fi
   else
-    err "resolve_config" "Failed — is NTFY_TOPIC set in env or config file?"
+    err "resolve_config" "Failed — set NTFY_TOPIC via env var or \$CLAUDE_PLUGIN_ROOT/config.json"
   fi
 else
   warn "config loader" "Not found at $CONFIG_LIB"
@@ -101,16 +102,14 @@ else
   topic="${NTFY_TOPIC:-}"
   token="${NTFY_TOKEN:-}"
 
-  if [[ -z "$topic" ]]; then
-    # Try reading from config files
-    for f in "./.claude-ntfy.json" "./.claude/ntfy.json" "$HOME/.claude-ntfy.json"; do
-      if [[ -f "$f" ]] && jq empty "$f" 2>/dev/null; then
-        topic=$(jq -r '.topic // empty' "$f")
-        [[ -z "$server" || "$server" == "http://localhost:8080" ]] && server=$(jq -r '.server_url // empty' "$f")
-        [[ -z "$token" ]] && token=$(jq -r '.token // empty' "$f")
-        [[ -n "$topic" ]] && break
-      fi
-    done
+  if [[ -z "$topic" && -n "${CLAUDE_PLUGIN_ROOT:-}" && -f "${CLAUDE_PLUGIN_ROOT}/config.json" ]]; then
+    if jq empty "${CLAUDE_PLUGIN_ROOT}/config.json" 2>/dev/null; then
+      topic=$(jq -r '.topic // empty' "${CLAUDE_PLUGIN_ROOT}/config.json")
+      local_server=$(jq -r '.server_url // empty' "${CLAUDE_PLUGIN_ROOT}/config.json")
+      [[ -n "$local_server" ]] && server="$local_server" || true
+      local_token=$(jq -r '.token // empty' "${CLAUDE_PLUGIN_ROOT}/config.json")
+      [[ -n "$local_token" ]] && token="$local_token" || true
+    fi
   fi
 
   found "server_url" "${server:-http://localhost:8080}"
@@ -119,7 +118,7 @@ else
   else
     err "topic" "(missing — notifications will fail!)"
   fi
-  if [[ -n "$token" ]]; then
+  if [[ -n "${token:-}" ]]; then
     found "token" "(set, hidden)"
   else
     notfound "token" "(not set)"
