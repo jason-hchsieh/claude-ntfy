@@ -1,6 +1,6 @@
 {
   "name": "claude-ntfy",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "description": "Send push notifications from Claude Code sessions via ntfy",
   "author": {
     "name": "jason-hchsieh"

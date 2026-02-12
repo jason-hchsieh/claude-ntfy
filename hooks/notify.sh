@@ -45,40 +45,40 @@ HOSTNAME=$(hostname 2>/dev/null || echo "unknown")
 USERNAME=$(whoami 2>/dev/null || echo "unknown")
 USER_HOST="${USERNAME}@${HOSTNAME}"
 
+PROJ="${PROJECT:-unknown}"
+
 case "$EVENT" in
   Stop)
-    TITLE="Claude Code finished on ${USER_HOST}"
-    MESSAGE="Session completed in **${PROJECT:-unknown project}**."$'\n'"_${USER_HOST}_"
+    TITLE="Stop | ${PROJ} | ${USERNAME} @ ${HOSTNAME}"
+    MESSAGE="Session completed."
     TAGS="white_check_mark"
     PRIORITY="3"
     ;;
   PermissionRequest)
     TOOL=$(printf '%s' "$INPUT" | jq -r '.tool_name // "unknown"' 2>/dev/null || echo "unknown")
     COMMAND=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null || echo "")
-    TITLE="Claude Code needs permission (${USER_HOST})"
+    TITLE="Permission | ${PROJ} | ${USERNAME} @ ${HOSTNAME}"
     if [[ -n "$COMMAND" ]]; then
-      MESSAGE="**${TOOL}** needs approval"$'\n'"\`${COMMAND}\`"$'\n'"_${USER_HOST} in ${PROJECT:-unknown project}_"
+      MESSAGE="**${TOOL}**: \`${COMMAND}\`"
     else
-      MESSAGE="**${TOOL}** needs approval in **${PROJECT:-unknown project}**"$'\n'"_${USER_HOST}_"
+      MESSAGE="**${TOOL}** needs approval"
     fi
     TAGS="warning"
     PRIORITY="4"
     ;;
   Notification)
-    TITLE=$(printf '%s' "$INPUT" | jq -r '.title // "Claude Code"' 2>/dev/null || echo "Claude Code")
+    NTFY_TITLE=$(printf '%s' "$INPUT" | jq -r '.title // empty' 2>/dev/null || echo "")
+    TITLE="Notification | ${PROJ} | ${USERNAME} @ ${HOSTNAME}"
     MESSAGE=$(printf '%s' "$INPUT" | jq -r '.message // "Notification from Claude Code"' 2>/dev/null || echo "Notification from Claude Code")
-    CONTEXT="_${USER_HOST}"
-    if [[ -n "$PROJECT" ]]; then
-      CONTEXT="${CONTEXT} in ${PROJECT}"
+    if [[ -n "$NTFY_TITLE" ]]; then
+      MESSAGE="**${NTFY_TITLE}**"$'\n'"${MESSAGE}"
     fi
-    MESSAGE="${MESSAGE}"$'\n'"${CONTEXT}_"
     TAGS="bell"
     PRIORITY="3"
     ;;
   *)
-    TITLE="Claude Code (${USER_HOST})"
+    TITLE="${EVENT:-Event} | ${PROJ} | ${USERNAME} @ ${HOSTNAME}"
     MESSAGE=$(printf '%s' "$INPUT" | jq -r '.message // "Notification from Claude Code"' 2>/dev/null || echo "Notification from Claude Code")
-    MESSAGE="${MESSAGE}"$'\n'"_${USER_HOST}_"
     TAGS="robot"
     PRIORITY="3"
     ;;
