@@ -60,8 +60,6 @@ mkdir -p ~/.config/claude-ntfy
 }
 ```
 
-Or use `~/.claude/claude-ntfy/config.json` as an alternative location.
-
 Use the `/setup` skill to create this file interactively.
 
 For more configuration options, see [docs/CONFIG.md](docs/CONFIG.md).
@@ -92,8 +90,7 @@ The plugin automatically sends notifications for these Claude Code events:
 
 Configuration can be provided via:
 - Environment variables (`NTFY_SERVER_URL`, `NTFY_TOPIC`, `NTFY_TOKEN`)
-- XDG config file (`~/.config/claude-ntfy/config.json`)
-- Claude dir config file (`~/.claude/claude-ntfy/config.json`)
+- Config file (`~/.config/claude-ntfy/config.json`)
 - Defaults (server: `http://localhost:8080`)
 
 ## Hook Events
@@ -123,11 +120,10 @@ The unified `hooks/notify.sh` script handles all events with contextual messages
 | `NTFY_SERVER_URL` | No | `http://localhost:8080` | ntfy server URL |
 | `NTFY_TOKEN` | No | — | Bearer token for authentication |
 
-### Config Files
+### Config File
 
-Create a config file for persistent settings:
+Create `~/.config/claude-ntfy/config.json` for persistent settings:
 
-**XDG Config** (`~/.config/claude-ntfy/config.json`) — recommended:
 ```json
 {
   "server_url": "http://localhost:8080",
@@ -136,19 +132,10 @@ Create a config file for persistent settings:
 }
 ```
 
-**Claude Dir Config** (`~/.claude/claude-ntfy/config.json`) — alternative:
-```json
-{
-  "server_url": "http://localhost:8080",
-  "topic": "claude-alerts"
-}
-```
-
 **Precedence** (highest to lowest):
 1. Environment variables
-2. XDG config (`~/.config/claude-ntfy/config.json`)
-3. Claude dir config (`~/.claude/claude-ntfy/config.json`)
-4. Defaults (server: `http://localhost:8080`)
+2. Config file (`~/.config/claude-ntfy/config.json`)
+3. Defaults (server: `http://localhost:8080`)
 
 For detailed configuration guide, see [docs/CONFIG.md](docs/CONFIG.md).
 

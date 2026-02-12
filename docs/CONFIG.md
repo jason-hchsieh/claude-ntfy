@@ -1,6 +1,6 @@
 # Configuration
 
-claude-ntfy can be configured via environment variables or config files.
+claude-ntfy can be configured via environment variables or a config file.
 
 ## Quick Start
 
@@ -15,18 +15,13 @@ export NTFY_TOKEN="tk_your_token"
 
 For persistent configuration, create a config file.
 
-## Configuration Files
+## Configuration File
 
-### Locations
+### Location
 
-claude-ntfy searches for config files in this order (later files override earlier ones):
+`~/.config/claude-ntfy/config.json` (XDG Base Directory spec: `$XDG_CONFIG_HOME/claude-ntfy/config.json`)
 
-1. **`~/.claude/claude-ntfy/config.json`** — Claude-native path
-2. **`~/.config/claude-ntfy/config.json`** — XDG Base Directory spec (`$XDG_CONFIG_HOME/claude-ntfy/config.json`)
-
-The recommended location is `~/.config/claude-ntfy/config.json` (XDG-compliant).
-
-### Creating a Config File
+### Creating the Config File
 
 ```bash
 mkdir -p ~/.config/claude-ntfy
@@ -75,18 +70,15 @@ Or use the `/setup` skill to create this file interactively.
    - `NTFY_TOPIC`
    - `NTFY_TOKEN`
 
-2. **XDG Config**
+2. **Config File**
    - `~/.config/claude-ntfy/config.json`
 
-3. **Claude Dir Config**
-   - `~/.claude/claude-ntfy/config.json`
-
-4. **Defaults**
+3. **Defaults**
    - `server_url`: `http://localhost:8080`
 
 ## Examples
 
-### XDG Config File
+### Config File
 
 Create `~/.config/claude-ntfy/config.json`:
 
@@ -97,19 +89,6 @@ Create `~/.config/claude-ntfy/config.json`:
   "token": "tk_abc123xyz"
 }
 ```
-
-### Claude Dir Config File
-
-Alternatively, create `~/.claude/claude-ntfy/config.json`:
-
-```json
-{
-  "server_url": "https://ntfy.example.com",
-  "topic": "my-alerts"
-}
-```
-
-Note: If both files exist, XDG config takes priority over Claude dir config.
 
 ### Environment Variable Override
 

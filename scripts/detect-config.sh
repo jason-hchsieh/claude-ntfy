@@ -48,8 +48,6 @@ fi
 
 header "Config Files"
 
-CLAUDE_DIR_CONFIG="${HOME}/.claude/claude-ntfy/config.json"
-
 show_config_file() {
   local label="$1" path="$2"
   if [[ -f "$path" ]]; then
@@ -70,8 +68,7 @@ show_config_file() {
   fi
 }
 
-show_config_file "XDG config" "$CLAUDE_NTFY_CONFIG_FILE"
-show_config_file "Claude dir config" "$CLAUDE_DIR_CONFIG"
+show_config_file "User config" "$CLAUDE_NTFY_CONFIG_FILE"
 
 # ── Resolved Configuration ─────────────────────────────────────────
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 # Tests for hooks/lib/config.sh configuration loading
-# Config paths: env vars > XDG (~/.config/claude-ntfy/) > Claude dir (~/.claude/claude-ntfy/) > defaults
+# Config paths: env vars > XDG (~/.config/claude-ntfy/) > defaults
 
 # Setup test environment
 setup() {
@@ -14,7 +14,6 @@ setup() {
   # Override XDG_CONFIG_HOME to use temp directory
   export XDG_CONFIG_HOME="$TEST_TMPDIR/xdg-config"
   mkdir -p "$XDG_CONFIG_HOME/claude-ntfy"
-  mkdir -p "$HOME/.claude/claude-ntfy"
 
   # Source the config library
   source "$(cd "$(dirname "$BATS_TEST_FILENAME")" && pwd)/../hooks/lib/config.sh"
@@ -80,7 +79,7 @@ EOF
 # ── resolve_config tests ──────────────────────────────────────────
 
 # Test 5: Resolve config from XDG config file
-@test "resolve_config: Load XDG config file" {
+@test "resolve_config: Load config file" {
   cat > "$XDG_CONFIG_HOME/claude-ntfy/config.json" << 'EOF'
 {
   "topic": "xdg-topic",
@@ -94,49 +93,8 @@ EOF
   [ "$(echo "$result" | jq -r '.server_url')" = "http://xdg.example.com" ]
 }
 
-# Test 6: Resolve config from Claude dir config file
-@test "resolve_config: Load Claude dir config file" {
-  cat > "$HOME/.claude/claude-ntfy/config.json" << 'EOF'
-{
-  "topic": "claude-dir-topic",
-  "server_url": "http://claude-dir.example.com"
-}
-EOF
-
-  result=$(resolve_config)
-
-  [ "$(echo "$result" | jq -r '.topic')" = "claude-dir-topic" ]
-  [ "$(echo "$result" | jq -r '.server_url')" = "http://claude-dir.example.com" ]
-}
-
-# Test 7: XDG config overrides Claude dir config
-@test "resolve_config: XDG config overrides Claude dir config" {
-  cat > "$HOME/.claude/claude-ntfy/config.json" << 'EOF'
-{
-  "topic": "claude-dir-topic",
-  "server_url": "http://claude-dir.example.com",
-  "token": "tk_claude_dir"
-}
-EOF
-
-  cat > "$XDG_CONFIG_HOME/claude-ntfy/config.json" << 'EOF'
-{
-  "topic": "xdg-topic",
-  "server_url": "http://xdg.example.com"
-}
-EOF
-
-  result=$(resolve_config)
-
-  # XDG values override Claude dir values
-  [ "$(echo "$result" | jq -r '.topic')" = "xdg-topic" ]
-  [ "$(echo "$result" | jq -r '.server_url')" = "http://xdg.example.com" ]
-  # Token from Claude dir is preserved (not overridden by XDG since XDG doesn't set it)
-  [ "$(echo "$result" | jq -r '.token')" = "tk_claude_dir" ]
-}
-
-# Test 8: Environment variables override all config files
-@test "resolve_config: Environment variables override config files" {
+# Test 6: Environment variables override config file
+@test "resolve_config: Environment variables override config file" {
   cat > "$XDG_CONFIG_HOME/claude-ntfy/config.json" << 'EOF'
 {
   "topic": "config-topic",
@@ -156,7 +114,7 @@ EOF
   [ "$(echo "$result" | jq -r '.server_url')" = "http://config.example.com" ]
 }
 
-# Test 9: Default server_url when not in config
+# Test 7: Default server_url when not in config
 @test "resolve_config: Use default server_url" {
   cat > "$XDG_CONFIG_HOME/claude-ntfy/config.json" << 'EOF'
 {
@@ -169,7 +127,7 @@ EOF
   [ "$(echo "$result" | jq -r '.server_url')" = "http://localhost:8080" ]
 }
 
-# Test 10: Environment-only configuration (no config files)
+# Test 8: Environment-only configuration (no config files)
 @test "resolve_config: Work with env vars only" {
   export NTFY_TOPIC="env-only-topic"
   export NTFY_SERVER_URL="http://env.example.com"
@@ -180,50 +138,46 @@ EOF
   [ "$(echo "$result" | jq -r '.server_url')" = "http://env.example.com" ]
 }
 
-# Test 11: Fail when no topic provided
+# Test 9: Fail when no topic provided
 @test "resolve_config: Fail without topic" {
   # No config files, no env vars
   ! resolve_config > /dev/null 2>&1
 }
 
-# Test 12: Partial override — XDG sets topic, Claude dir sets server
-@test "resolve_config: Merge fields from both config files" {
-  cat > "$HOME/.claude/claude-ntfy/config.json" << 'EOF'
-{
-  "server_url": "http://claude-dir.example.com"
-}
-EOF
-
+# Test 10: Config file with all fields
+@test "resolve_config: Load config with all fields" {
   cat > "$XDG_CONFIG_HOME/claude-ntfy/config.json" << 'EOF'
 {
-  "topic": "xdg-topic"
+  "server_url": "https://ntfy.example.com",
+  "topic": "full-topic",
+  "token": "tk_full123"
 }
 EOF
 
   result=$(resolve_config)
 
-  # topic from XDG, but server_url from Claude dir is overridden by XDG's empty merge
-  # XDG config merges on top, but only has topic — server_url falls back to default
-  [ "$(echo "$result" | jq -r '.topic')" = "xdg-topic" ]
+  [ "$(echo "$result" | jq -r '.server_url')" = "https://ntfy.example.com" ]
+  [ "$(echo "$result" | jq -r '.topic')" = "full-topic" ]
+  [ "$(echo "$result" | jq -r '.token')" = "tk_full123" ]
 }
 
 # ── validate_config tests ─────────────────────────────────────────
 
-# Test 13: Validate config - require topic
+# Test 11: Validate config - require topic
 @test "validate_config: Require topic field" {
   config='{"server_url": "http://example.com"}'
 
   ! validate_config "$config" > /dev/null 2>&1
 }
 
-# Test 14: Validate config - topic present
+# Test 12: Validate config - topic present
 @test "validate_config: Accept config with topic" {
   config='{"topic": "test-topic"}'
 
   validate_config "$config" > /dev/null 2>&1
 }
 
-# Test 15: Empty topic string is invalid
+# Test 13: Empty topic string is invalid
 @test "validate_config: Reject empty topic" {
   config='{"topic": ""}'
 
@@ -232,7 +186,7 @@ EOF
 
 # ── config_value tests ────────────────────────────────────────────
 
-# Test 16: config_value helper
+# Test 14: config_value helper
 @test "config_value: Extract field from config" {
   config='{"server_url": "http://example.com", "topic": "test"}'
 
@@ -240,7 +194,7 @@ EOF
   [ "$(config_value "$config" "topic")" = "test" ]
 }
 
-# Test 17: config_value with default
+# Test 15: config_value with default
 @test "config_value: Return default for missing field" {
   config='{"topic": "test"}'
 

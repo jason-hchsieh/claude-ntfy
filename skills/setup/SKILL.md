@@ -271,12 +271,9 @@ Or in `~/.config/claude-ntfy/config.json`:
 
 ## Configuration File Format Reference
 
-### Config File Locations
+### Config File Location
 
-claude-ntfy looks for config files in this order (later files override earlier ones):
-
-1. `~/.claude/claude-ntfy/config.json` (Claude-native path)
-2. `~/.config/claude-ntfy/config.json` (XDG Base Directory spec)
+`~/.config/claude-ntfy/config.json` (XDG Base Directory spec)
 
 ```json
 {
@@ -299,9 +296,8 @@ claude-ntfy looks for config files in this order (later files override earlier o
 When claude-ntfy loads, it uses this precedence (highest to lowest):
 
 1. **Environment variables** (`NTFY_SERVER_URL`, `NTFY_TOPIC`, `NTFY_TOKEN`)
-2. **XDG config** (`~/.config/claude-ntfy/config.json`)
-3. **Claude dir config** (`~/.claude/claude-ntfy/config.json`)
-4. **Defaults** (server: `http://localhost:8080`)
+2. **Config file** (`~/.config/claude-ntfy/config.json`)
+3. **Defaults** (server: `http://localhost:8080`)
 
 ---
 
@@ -345,7 +341,7 @@ After setup is complete:
 bash "$CLAUDE_PLUGIN_ROOT/scripts/detect-config.sh"
 ```
 
-Precedence: env vars > XDG config > ~/.claude/ config > defaults
+Precedence: env vars > config file > defaults
 
 ### Server connection issues
 
