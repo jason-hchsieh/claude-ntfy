@@ -4,9 +4,9 @@
 
 set -euo pipefail
 
-# XDG Base Directory spec
-CLAUDE_NTFY_CONFIG_DIR="${XDG_CONFIG_HOME:-${HOME}/.config}/claude-ntfy"
-CLAUDE_NTFY_CONFIG_FILE="${CLAUDE_NTFY_CONFIG_DIR}/config.json"
+# Source shared config library (provides CLAUDE_NTFY_CONFIG_FILE, resolve_config, etc.)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/config.sh"
 
 # Colors (disabled if not a terminal)
 if [[ -t 1 ]]; then
@@ -57,9 +57,9 @@ show_config_file() {
       server=$(jq -r '.server_url // empty' "$path")
       topic=$(jq -r '.topic // empty' "$path")
       token=$(jq -r '.token // empty' "$path")
-      [[ -n "$server" ]] && printf "    server_url: %s\n" "$server" || true
-      [[ -n "$topic" ]]  && printf "    topic:      %s\n" "$topic" || true
-      [[ -n "$token" ]]  && printf "    token:      (set, hidden)\n" || true
+      if [[ -n "$server" ]]; then printf "    server_url: %s\n" "$server"; fi
+      if [[ -n "$topic" ]]; then printf "    topic:      %s\n" "$topic"; fi
+      if [[ -n "$token" ]]; then printf "    token:      (set, hidden)\n"; fi
     else
       err "$label" "$path (invalid JSON!)"
     fi
@@ -74,35 +74,25 @@ show_config_file "User config" "$CLAUDE_NTFY_CONFIG_FILE"
 
 header "Resolved Configuration"
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONFIG_LIB="${SCRIPT_DIR}/../hooks/lib/config.sh"
+if CONFIG=$(resolve_config 2>/dev/null); then
+  set_config_vars "$CONFIG"
 
-if [[ -f "$CONFIG_LIB" ]]; then
-  source "$CONFIG_LIB"
-  if CONFIG=$(resolve_config 2>/dev/null); then
-    server=$(printf '%s' "$CONFIG" | jq -r '.server_url')
-    topic=$(printf '%s' "$CONFIG" | jq -r '.topic')
-    token=$(printf '%s' "$CONFIG" | jq -r '.token // empty')
-
-    found "server_url" "$server"
-    found "topic" "$topic"
-    if [[ -n "$token" ]]; then
-      found "token" "(set, hidden)"
-    else
-      notfound "token" "(not set)"
-    fi
+  found "server_url" "$NTFY_SERVER_URL"
+  found "topic" "$NTFY_TOPIC"
+  if [[ -n "$NTFY_TOKEN" ]]; then
+    found "token" "(set, hidden)"
   else
-    err "resolve_config" "Failed — set NTFY_TOPIC via env var or ${CLAUDE_NTFY_CONFIG_FILE}"
+    notfound "token" "(not set)"
   fi
 else
-  warn "config loader" "Not found at $CONFIG_LIB"
+  err "resolve_config" "Failed — set NTFY_TOPIC via env var or ${CLAUDE_NTFY_CONFIG_FILE}"
 fi
 
 # ── Server Connectivity ────────────────────────────────────────────
 
 header "Server Connectivity"
 
-RESOLVED_SERVER="${server:-${NTFY_SERVER_URL:-http://localhost:8080}}"
+RESOLVED_SERVER="${NTFY_SERVER_URL:-http://localhost:8080}"
 HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 3 "${RESOLVED_SERVER}/v1/health" 2>/dev/null || echo "000")
 
 if [[ "$HTTP_CODE" == "200" ]]; then

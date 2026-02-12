@@ -1,12 +1,18 @@
 ---
 name: setup
 description: Use this skill when the user wants to set up ntfy notifications for claude-ntfy. Triggers on requests like "set up ntfy", "configure notifications", "initialize ntfy", or "setup notification server". Supports both new server setup and configuration of existing servers.
-version: 3.1.0
+version: 3.2.0
 ---
 
 # Setup ntfy Notifications
 
 Guide the user through setting up ntfy notifications for claude-ntfy. Supports both new server setup and configuration of existing servers.
+
+## Reference
+
+- Config diagnostics: [`scripts/detect-config.sh`](../../scripts/README.md#detect-configsh--configuration-diagnostics)
+- Test notification: [`scripts/test-ntfy.sh`](../../scripts/README.md#test-ntfysh--test-notification)
+- Configuration guide: [`docs/CONFIG.md`](../../docs/CONFIG.md)
 
 ## Overview
 

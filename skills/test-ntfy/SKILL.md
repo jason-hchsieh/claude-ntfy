@@ -1,59 +1,45 @@
 ---
 name: test-ntfy
 description: Use this skill when the user wants to test, verify, or debug their ntfy notification setup. Triggers on requests like "test notification", "send test message", "verify ntfy works", or "check notification setup".
-version: 1.1.0
+version: 2.1.0
 ---
 
 # Test Notification
 
 Send a test notification to verify the ntfy setup is working correctly.
 
+## Reference
+
+- Script: [`scripts/test-ntfy.sh`](../../scripts/README.md#test-ntfysh--test-notification)
+- Config: [`docs/CONFIG.md`](../../docs/CONFIG.md)
+
 ## Steps
 
-### 1. Detect configuration
-
-Run the detect script to see the current configuration state:
+### 1. Run the test script
 
 ```bash
-bash "$CLAUDE_PLUGIN_ROOT/scripts/detect-config.sh"
+bash "$CLAUDE_PLUGIN_ROOT/scripts/test-ntfy.sh"
 ```
 
-This shows env vars, config file (`~/.config/claude-ntfy/config.json`), resolved configuration, and server connectivity.
+This script loads configuration, checks server health, sends a test notification, and reports the result. See [`scripts/README.md`](../../scripts/README.md) for details.
 
-If the topic is not configured, ask the user to configure it first (suggest the **setup** skill).
+### 2. Interpret results
 
-### 2. Send test notification
+| Result | Meaning | Action |
+|--------|---------|--------|
+| OK (HTTP 200) | Setup working | Ask user to check their ntfy client |
+| FAIL (HTTP 401/403) | Auth failure | Check `NTFY_TOKEN` value |
+| FAIL (HTTP 404) | Topic not found | Check topic name in config |
+| FAIL (connection error) | Server unreachable | Check server URL |
+| Config error | No topic configured | Suggest the `/setup` skill |
 
-Send a test message using curl with the resolved configuration:
+### 3. Troubleshooting
 
-```bash
-curl -H "Title: Claude Code Test" \
-     -d "This is a test notification from claude-ntfy. If you see this, your setup is working!" \
-     "${NTFY_SERVER_URL:-http://localhost:8080}/${NTFY_TOPIC}"
-```
-
-If `NTFY_TOKEN` is set, include authentication:
-
-```bash
-curl -H "Title: Claude Code Test" \
-     -H "Authorization: Bearer ${NTFY_TOKEN}" \
-     -d "This is a test notification from claude-ntfy. If you see this, your setup is working!" \
-     "${NTFY_SERVER_URL:-http://localhost:8080}/${NTFY_TOPIC}"
-```
-
-### 3. Verify result
-
-Check the curl response:
-
-- **HTTP 200**: Notification sent successfully. Tell the user to check their ntfy client (web, mobile, or desktop) for the message.
-- **HTTP 401/403**: Authentication issue. The `NTFY_TOKEN` may be incorrect or missing.
-- **Connection refused**: The ntfy server is not running. Suggest the **setup** skill.
-- **Other errors**: Show the full response and help debug.
-
-### 4. Troubleshooting
-
-If the notification was sent but not received:
-- Verify the user is subscribed to the correct topic (`$NTFY_TOPIC`)
-- Check the server URL matches (`$NTFY_SERVER_URL`)
-- Try opening `$NTFY_SERVER_URL/$NTFY_TOPIC` in a browser to see messages
-- Run `bash "$CLAUDE_PLUGIN_ROOT/scripts/detect-config.sh"` to verify all config sources
+If the test passes but the user doesn't receive notifications:
+- Verify subscription to the correct topic
+- Check the server URL matches
+- Try opening `$NTFY_SERVER_URL/$NTFY_TOPIC` in a browser
+- Run the diagnostics script to inspect all config sources:
+  ```bash
+  bash "$CLAUDE_PLUGIN_ROOT/scripts/detect-config.sh"
+  ```

@@ -144,14 +144,14 @@ For detailed configuration guide, see [docs/CONFIG.md](docs/CONFIG.md).
 ### Verify Script Syntax
 
 ```bash
-bash -n hooks/lib/config.sh       # Check config loader
-bash -n hooks/notify.sh           # Check notification hook
+bash -n scripts/config.sh         # Check config loader
+bash -n scripts/notify.sh         # Check notification hook
 ```
 
 ### Lint with shellcheck
 
 ```bash
-shellcheck hooks/lib/config.sh hooks/notify.sh
+shellcheck scripts/*.sh
 ```
 
 ### Run Tests

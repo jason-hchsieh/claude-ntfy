@@ -3,7 +3,7 @@
 #
 # Configuration can be provided via:
 #   - Environment variables (NTFY_SERVER_URL, NTFY_TOPIC, NTFY_TOKEN)
-#   - Config file (~/.config/claude-ntfy/config.json or ~/.claude/claude-ntfy/config.json)
+#   - Config file (~/.config/claude-ntfy/config.json)
 #
 # Required: NTFY_TOPIC (env var or config file)
 # Optional: NTFY_SERVER_URL (default: http://localhost:8080)
@@ -15,7 +15,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Source the config loader
-source "${SCRIPT_DIR}/lib/config.sh"
+source "${SCRIPT_DIR}/config.sh"
 
 # Load configuration (merges env vars, config files, and defaults)
 CONFIG=$(resolve_config) || {
@@ -24,28 +24,31 @@ CONFIG=$(resolve_config) || {
 }
 
 # Extract configuration values
-NTFY_SERVER_URL=$(printf '%s' "$CONFIG" | jq -r '.server_url')
-NTFY_TOPIC=$(printf '%s' "$CONFIG" | jq -r '.topic')
-NTFY_TOKEN=$(printf '%s' "$CONFIG" | jq -r '.token // empty')
+set_config_vars "$CONFIG"
+build_auth_headers
 
 URL="${NTFY_SERVER_URL}/${NTFY_TOPIC}"
 
-if [[ -n "${NTFY_TOKEN:-}" ]]; then
-  HEADERS=(-H "Authorization: Bearer ${NTFY_TOKEN}")
-else
-  HEADERS=()
-fi
-
 INPUT=$(cat)
 EVENT=$(printf '%s' "$INPUT" | jq -r '.hook_event_name // ""' 2>/dev/null || echo "")
-PROJECT=$(printf '%s' "$INPUT" | jq -r '.cwd // ""' 2>/dev/null | xargs basename 2>/dev/null || echo "")
+CWD=$(printf '%s' "$INPUT" | jq -r '.cwd // ""' 2>/dev/null || echo "")
+PROJECT=$(printf '%s' "$CWD" | xargs basename 2>/dev/null || echo "")
 
 # Get hostname and username for context
 HOSTNAME=$(hostname 2>/dev/null || echo "unknown")
 USERNAME=$(whoami 2>/dev/null || echo "unknown")
-USER_HOST="${USERNAME}@${HOSTNAME}"
 
+# Detect git branch if in a git repository
+GIT_BRANCH=""
+if [[ -n "$CWD" ]] && [[ -d "$CWD/.git" || -n "$(git -C "$CWD" rev-parse --git-dir 2>/dev/null)" ]]; then
+  GIT_BRANCH=$(git -C "$CWD" branch --show-current 2>/dev/null || echo "")
+fi
+
+# Format project with branch if available
 PROJ="${PROJECT:-unknown}"
+if [[ -n "$GIT_BRANCH" ]]; then
+  PROJ="${PROJ} (${GIT_BRANCH})"
+fi
 
 case "$EVENT" in
   Stop)
@@ -84,7 +87,7 @@ case "$EVENT" in
     ;;
 esac
 
-curl -s ${HEADERS[@]+"${HEADERS[@]}"} \
+curl -s ${NTFY_HEADERS[@]+"${NTFY_HEADERS[@]}"} \
   -H "Title: ${TITLE}" \
   -H "Tags: ${TAGS}" \
   -H "Priority: ${PRIORITY}" \

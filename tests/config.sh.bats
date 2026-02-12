@@ -1,5 +1,5 @@
 #!/usr/bin/env bats
-# Tests for hooks/lib/config.sh configuration loading
+# Tests for scripts/config.sh configuration loading
 # Config paths: env vars > XDG (~/.config/claude-ntfy/) > defaults
 
 # Setup test environment
@@ -16,7 +16,7 @@ setup() {
   mkdir -p "$XDG_CONFIG_HOME/claude-ntfy"
 
   # Source the config library
-  source "$(cd "$(dirname "$BATS_TEST_FILENAME")" && pwd)/../hooks/lib/config.sh"
+  source "$(cd "$(dirname "$BATS_TEST_FILENAME")" && pwd)/../scripts/config.sh"
 }
 
 teardown() {
@@ -199,4 +199,60 @@ EOF
   config='{"topic": "test"}'
 
   [ "$(config_value "$config" "token" "default-token")" = "default-token" ]
+}
+
+# ── set_config_vars tests ────────────────────────────────────────
+
+# Test 16: set_config_vars sets all variables
+@test "set_config_vars: Set all variables from config" {
+  config='{"server_url": "http://example.com", "topic": "test-topic", "token": "tk_123"}'
+
+  set_config_vars "$config"
+
+  [ "$NTFY_SERVER_URL" = "http://example.com" ]
+  [ "$NTFY_TOPIC" = "test-topic" ]
+  [ "$NTFY_TOKEN" = "tk_123" ]
+}
+
+# Test 17: set_config_vars with missing token
+@test "set_config_vars: Empty token when not in config" {
+  config='{"server_url": "http://example.com", "topic": "test-topic"}'
+
+  set_config_vars "$config"
+
+  [ "$NTFY_SERVER_URL" = "http://example.com" ]
+  [ "$NTFY_TOPIC" = "test-topic" ]
+  [ -z "$NTFY_TOKEN" ]
+}
+
+# ── build_auth_headers tests ─────────────────────────────────────
+
+# Test 18: build_auth_headers with token
+@test "build_auth_headers: Set headers when token present" {
+  NTFY_TOKEN="tk_test"
+
+  build_auth_headers
+
+  [ "${#NTFY_HEADERS[@]}" = "2" ]
+  [ "${NTFY_HEADERS[0]}" = "-H" ]
+  [ "${NTFY_HEADERS[1]}" = "Authorization: Bearer tk_test" ]
+}
+
+# Test 19: build_auth_headers without token
+@test "build_auth_headers: Empty headers when no token" {
+  NTFY_TOKEN=""
+
+  build_auth_headers
+
+  [ "${#NTFY_HEADERS[@]}" = "0" ]
+}
+
+# Test 20: build_auth_headers with explicit token argument
+@test "build_auth_headers: Use explicit token argument" {
+  NTFY_TOKEN=""
+
+  build_auth_headers "tk_explicit"
+
+  [ "${#NTFY_HEADERS[@]}" = "2" ]
+  [ "${NTFY_HEADERS[1]}" = "Authorization: Bearer tk_explicit" ]
 }

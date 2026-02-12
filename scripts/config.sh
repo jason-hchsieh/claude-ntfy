@@ -84,3 +84,23 @@ config_value() {
     echo "$value"
   fi
 }
+
+# Set standard config variables from resolved config JSON
+# Sets: NTFY_SERVER_URL, NTFY_TOPIC, NTFY_TOKEN
+set_config_vars() {
+  local config="$1"
+  NTFY_SERVER_URL=$(printf '%s' "$config" | jq -r '.server_url')
+  NTFY_TOPIC=$(printf '%s' "$config" | jq -r '.topic')
+  NTFY_TOKEN=$(printf '%s' "$config" | jq -r '.token // empty')
+}
+
+# Build curl auth headers array from token
+# Sets: NTFY_HEADERS (used by callers that source this file)
+build_auth_headers() {
+  local token="${1:-$NTFY_TOKEN}"
+  NTFY_HEADERS=()
+  if [[ -n "${token:-}" ]]; then
+    # shellcheck disable=SC2034  # NTFY_HEADERS used by scripts sourcing this file
+    NTFY_HEADERS=(-H "Authorization: Bearer ${token}")
+  fi
+}
