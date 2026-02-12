@@ -323,7 +323,7 @@ After setup is complete:
    claude plugin add /path/to/claude-ntfy
    ```
 
-2. **Test notifications** using the `test-notification` skill:
+2. **Test notifications** using the `test-ntfy` skill:
    ```
    "Send a test notification to verify setup"
    ```
@@ -374,4 +374,4 @@ lsof -i :8080
 
 - ntfy Documentation: https://docs.ntfy.sh/
 - Configuration Guide: See [docs/CONFIG.md](../../docs/CONFIG.md)
-- Test Notification Skill: Use `test-notification` skill after setup
+- Test Notification Skill: Use `test-ntfy` skill after setup

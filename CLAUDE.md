@@ -12,7 +12,7 @@ hooks/
   hooks.json        # Plugin hook configuration
 skills/
   setup/            # Skill: guide ntfy setup (server, config, or both)
-  test-notification/ # Skill: send test notification
+  test-ntfy/        # Skill: send test notification
 scripts/
   detect-config.sh  # Detect and display current ntfy configuration
 docker/             # Docker compose for self-hosted ntfy

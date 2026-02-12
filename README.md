@@ -108,7 +108,7 @@ The unified `hooks/notify.sh` script handles all events with contextual messages
 | Skill | Description |
 |-------|-------------|
 | `setup` | Guide through ntfy server setup with Docker, env vars, and subscription |
-| `test-notification` | Send a test notification and verify the setup works |
+| `test-ntfy` | Send a test notification and verify the setup works |
 
 ## Configuration Methods
 

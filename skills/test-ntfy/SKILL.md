@@ -1,5 +1,5 @@
 ---
-name: test-notification
+name: test-ntfy
 description: Use this skill when the user wants to test, verify, or debug their ntfy notification setup. Triggers on requests like "test notification", "send test message", "verify ntfy works", or "check notification setup".
 version: 1.1.0
 ---
@@ -18,7 +18,7 @@ Run the detect script to see the current configuration state:
 bash "$CLAUDE_PLUGIN_ROOT/scripts/detect-config.sh"
 ```
 
-This shows env vars, config files (`~/.config/claude-ntfy/config.json` and `~/.claude/claude-ntfy/config.json`), resolved configuration, and server connectivity.
+This shows env vars, config file (`~/.config/claude-ntfy/config.json`), resolved configuration, and server connectivity.
 
 If the topic is not configured, ask the user to configure it first (suggest the **setup** skill).
 
